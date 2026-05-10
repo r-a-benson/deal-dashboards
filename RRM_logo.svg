@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 220" width="600" height="220">
+  <defs>
+    <linearGradient id="rrmBlue" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fork: 4 prongs + handle -->
+  <g fill="#0a0a0a">
+    <rect x="22"  y="22" width="9"  height="60" rx="3"/>
+    <rect x="40"  y="22" width="9"  height="60" rx="3"/>
+    <rect x="58"  y="22" width="9"  height="60" rx="3"/>
+    <rect x="76"  y="22" width="9"  height="60" rx="3"/>
+    <path d="M22 78 Q 53 90 85 78 L 73 102 Q 71 168 65 198 Q 57 200 51 198 L 35 102 Z"/>
+  </g>
+
+  <!-- Knife -->
+  <g fill="#0a0a0a">
+    <path d="M104 22 Q 122 22 128 38 L 128 92 L 102 92 L 102 38 Q 102 22 104 22 Z"/>
+    <path d="M102 92 L 126 92 L 120 198 Q 117 200 110 200 L 105 198 Z"/>
+  </g>
+
+  <!-- Blue menu tab -->
+  <rect x="148" y="22" width="42" height="178" rx="2" fill="url(#rrmBlue)"/>
+  <circle cx="169" cy="46" r="9"  fill="none" stroke="#ffffff" stroke-width="4"/>
+  <circle cx="169" cy="166" r="4" fill="#ffffff"/>
+  <circle cx="169" cy="184" r="4" fill="#ffffff"/>
+
+  <!-- RRM wordmark -->
+  <text x="220" y="142" font-family="Helvetica, Arial, sans-serif"
+        font-weight="900" font-size="120" fill="#0a0a0a" letter-spacing="-4">RRM</text>
+
+  <!-- Tagline -->
+  <text x="222" y="180" font-family="Helvetica, Arial, sans-serif"
+        font-weight="400" font-size="18" fill="#0a0a0a" letter-spacing="3.5">RESTAURANT RISK MANAGEMENT</text>
+</svg>
