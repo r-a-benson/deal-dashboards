@@ -80,11 +80,14 @@ body{background:var(--bg);color:var(--gray-dk);font-family:'Segoe UI',-apple-sys
 .lc-bar div{height:100%;border-radius:2px;background:var(--sage-md)}
 
 /* DRILL */
-.drill{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:20px;display:none}
+.drill{background:var(--card);border:2px solid var(--sage-md);border-radius:14px;padding:0;display:none;box-shadow:0 6px 24px rgba(59,109,17,0.13)}
 .drill.on{display:block}
-.drill-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-.drill-hdr h3{font-size:15px;font-weight:600;color:var(--sage)}
-.close-btn{border:1px solid var(--border2);background:var(--surf);padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--gray)}
+.drill-hdr{display:flex;justify-content:space-between;align-items:center;background:var(--sage);border-radius:12px 12px 0 0;padding:16px 22px;margin-bottom:0}
+.drill-hdr h3{font-size:16px;font-weight:700;color:#fff}
+.drill-hdr .drill-sub-txt{font-size:12px;color:rgba(255,255,255,0.72);margin-top:3px}
+.drill-body{padding:22px}
+.close-btn{border:1px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.15);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;color:#fff;font-weight:500}
+.close-btn:hover{background:rgba(255,255,255,0.25)}
 
 /* CAUSE FILTER */
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
@@ -185,6 +188,7 @@ tbody td{padding:9px 12px;font-size:12px;color:var(--gray-dk)}
   <button class="tb" onclick="switchTab('location',this)">By Location <span class="tc">9</span></button>
   <button class="tb" onclick="switchTab('cause',this)">Cause of Loss <span class="tc">7</span></button>
   <button class="tb" onclick="switchTab('open',this)">Open Claims <span class="tc red">22</span></button>
+  <button class="tb" onclick="switchTab('closed',this)">Closed Claims <span class="tc">16</span></button>
   <button class="tb" onclick="switchTab('reco',this)">Recommendations <span class="tc amber">6</span></button>
 </div>
 
@@ -276,21 +280,23 @@ tbody td{padding:9px 12px;font-size:12px;color:var(--gray-dk)}
     <div class="drill-hdr">
       <div>
         <h3 id="drillTitle">—</h3>
-        <div style="font-size:12px;color:var(--gray-md);margin-top:2px" id="drillSub"></div>
+        <div class="drill-sub-txt" id="drillSub"></div>
       </div>
       <button class="close-btn" onclick="closeDrill()">✕ Close</button>
     </div>
-    <div class="row r2b" style="margin-bottom:16px">
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gray-md);margin-bottom:10px">Summary</div>
-        <div class="ds-grid" id="drillStats"></div>
+    <div class="drill-body">
+      <div class="row r2b" style="margin-bottom:16px">
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gray-md);margin-bottom:10px">Summary</div>
+          <div class="ds-grid" id="drillStats"></div>
+        </div>
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gray-md);margin-bottom:10px">Cause Breakdown</div>
+          <div class="ch-wrap" style="height:170px"><canvas id="drillCause"></canvas></div>
+        </div>
       </div>
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gray-md);margin-bottom:10px">Cause Breakdown</div>
-        <div class="ch-wrap" style="height:170px"><canvas id="drillCause"></canvas></div>
-      </div>
+      <div class="tw" id="drillTable"></div>
     </div>
-    <div class="tw" id="drillTable"></div>
   </div>
 </div>
 
@@ -338,6 +344,44 @@ tbody td{padding:9px 12px;font-size:12px;color:var(--gray-dk)}
   </div>
   <div class="sec">Open Claims — Ranked by Reserve Amount</div>
   <div class="card" style="padding:0"><div class="tw" id="openTbl"></div></div>
+</div>
+
+<!-- ══════════════════ CLOSED CLAIMS ══════════════════ -->
+<div class="panel" id="panel-closed">
+  <div class="os-row">
+    <div class="os sage"><div class="os-v">16</div><div class="os-l">Closed claims</div></div>
+    <div class="os sage"><div class="os-v">$357K</div><div class="os-l">Total paid (losses + expense)</div></div>
+    <div class="os gray"><div class="os-v">$22,314</div><div class="os-l">Avg cost per closed claim</div></div>
+    <div class="os amber"><div class="os-v">$0</div><div class="os-l">Remaining open reserves</div></div>
+  </div>
+  <div class="row r2b">
+    <div class="card">
+      <h3>Closed Claims by Policy Year</h3>
+      <p class="sub">How many claims reached resolution in each period</p>
+      <div class="ch-wrap" style="height:220px"><canvas id="closedYearChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Closed Claim Cost Breakdown</h3>
+      <p class="sub">Paid losses vs. paid expense (ALAE)</p>
+      <div class="ch-wrap" style="height:180px"><canvas id="closedCompChart"></canvas></div>
+      <div style="margin-top:12px;background:var(--surf);border-radius:8px;padding:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:7px">
+          <span style="font-size:12px;color:var(--gray-md)">Paid Losses</span>
+          <span style="font-size:13px;font-weight:600;color:var(--sage)">$297,086</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:7px">
+          <span style="font-size:12px;color:var(--gray-md)">Paid Expense (ALAE)</span>
+          <span style="font-size:13px;font-weight:600;color:var(--amber)">$59,941</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border2)">
+          <span style="font-size:12px;font-weight:600">Total Paid</span>
+          <span style="font-size:14px;font-weight:600;color:var(--sage)">$357,027</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sec">All Closed Claims — Full Detail</div>
+  <div class="card" style="padding:0"><div class="tw" id="closedTbl"></div></div>
 </div>
 
 <!-- ══════════════════ RECOMMENDATIONS ══════════════════ -->
@@ -416,12 +460,37 @@ const CC={
 };
 
 // ─── TABS ───────────────────────────────────────────────────────────────────
+let closedChartsReady=false;
 function switchTab(name, btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
   $('panel-'+name).classList.add('on');
   if(btn) btn.classList.add('on');
   else document.querySelectorAll('.tb').forEach(b=>{if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+name+"'"))b.classList.add('on');});
+  if(name==='closed'&&!closedChartsReady){initClosedCharts();closedChartsReady=true;}
+}
+function initClosedCharts(){
+  const closedByYear={};
+  closedClaims.forEach(c=>{closedByYear[c.yr]=(closedByYear[c.yr]||0)+1;});
+  const yrs=['2020','2021','2022','2023','2024','2025'];
+  new Chart($('closedYearChart'),{
+    type:'bar',
+    data:{labels:yrs.map(y=>y+'–'+(parseInt(y)+1).toString().slice(2)),
+      datasets:[{label:'Closed claims',data:yrs.map(y=>closedByYear[y]||0),backgroundColor:'#C0DD97cc',borderColor:'#639922',borderWidth:1,borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Closed: '+c.parsed.y+' claim'+(c.parsed.y!==1?'s':'')}}},
+      scales:{x:{grid:{color:gridColor}},y:{grid:{color:gridColor},ticks:{stepSize:1}}}}
+  });
+  const closedPL=closedClaims.reduce((a,c)=>a+c.pl,0);
+  const closedPE=closedClaims.reduce((a,c)=>a+c.pe,0);
+  new Chart($('closedCompChart'),{
+    type:'doughnut',
+    data:{labels:['Paid Losses','Paid Expense (ALAE)'],
+      datasets:[{data:[closedPL,closedPE],backgroundColor:['#C0DD97cc','#FAC775cc'],borderColor:['#639922','#BA7517'],borderWidth:2,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:10}},
+        tooltip:{callbacks:{label:c=>c.label+': '+fmtF(c.parsed)+' ('+Math.round(c.parsed/(closedPL+closedPE)*100)+'%)'}}}}
+  });
 }
 
 Chart.defaults.font.family="'Segoe UI',sans-serif";
@@ -652,6 +721,12 @@ const RECOS=[
    impact:'Slip & Fall and Laceration claims represent ~$138K in incurred losses. Equipment and training investments in these categories have a clear and measurable return.'},
 ];
 
+// ─── CLOSED CLAIMS TAB ───────────────────────────────────────────────────────
+const closedClaims=CLAIMS.filter(c=>c.st==='Closed').sort((a,b)=>b.total-a.total);
+// Table populated immediately; charts are lazy-initialized in initClosedCharts() on first tab visit
+$('closedTbl').innerHTML=buildTable(closedClaims);
+
+// ─── RECOMMENDATIONS ─────────────────────────────────────────────────────────
 $('recoGrid').innerHTML=RECOS.map(r=>`
   <div class="rc ${r.p}">
     <div class="rc-hdr">
