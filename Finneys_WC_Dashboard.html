@@ -6,10 +6,13 @@
 <title>Finney's WC & Loss Analysis</title>
 <style>
 :root {
-  --bg:#F8F7F4; --card:#FFFFFF; --surf:#F1EFE8; --surf2:#E8E6DF;
-  --sage-dk:#27500A; --sage:#3B6D11; --sage-md:#639922; --sage-lt:#C0DD97; --sage-xl:#EAF3DE;
+  --bg:#F5F7FA; --card:#FFFFFF; --surf:#EBF0F8; --surf2:#DCE5F2;
+  /* navy replaces sage */
+  --sage-dk:#0D1B2A; --sage:#1B3A6B; --sage-md:#2563A8; --sage-lt:#93B4D9; --sage-xl:#E8F0F8;
+  /* coral stays for alerts / open claims */
   --coral-dk:#712B13; --coral:#D85A30; --coral-md:#F0997B; --coral-lt:#F5C4B3; --coral-xl:#FAECE7;
-  --amber-dk:#633806; --amber:#854F0B; --amber-md:#BA7517; --amber-lt:#FAC775; --amber-xl:#FAEEDA;
+  /* gold replaces amber */
+  --amber-dk:#7A5200; --amber:#A87000; --amber-md:#C9920F; --amber-lt:#F0CC6A; --amber-xl:#FDF5D0;
   --gray-dk:#2C2C2A; --gray:#5F5E5A; --gray-md:#888780; --gray-lt:#D3D1C7; --gray-xl:#F1EFE8;
   --purple:#534AB7; --purple-lt:#EEEDFE; --teal:#0F6E56; --teal-lt:#E1F5EE;
   --border:rgba(0,0,0,0.07); --border2:rgba(0,0,0,0.13);
@@ -21,7 +24,7 @@ body{background:var(--bg);color:var(--gray-dk);font-family:'Segoe UI',-apple-sys
 .hdr h1{font-size:19px;font-weight:600;letter-spacing:.2px}
 .hdr p{font-size:12px;opacity:.75;margin-top:3px}
 .hdr-right{text-align:right;font-size:12px;opacity:.85}
-.hdr-right strong{font-size:20px;color:#C0DD97;display:block;margin-bottom:2px}
+.hdr-right strong{font-size:20px;color:#F0CC6A;display:block;margin-bottom:2px}
 
 .alert-bar{background:var(--coral-xl);border-bottom:1px solid var(--coral-lt);padding:11px 32px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--gray-dk)}
 .alert-bar strong{color:var(--coral-dk)}
@@ -80,7 +83,7 @@ body{background:var(--bg);color:var(--gray-dk);font-family:'Segoe UI',-apple-sys
 .lc-bar div{height:100%;border-radius:2px;background:var(--sage-md)}
 
 /* DRILL */
-.drill{background:var(--card);border:2px solid var(--sage-md);border-radius:14px;padding:0;display:none;box-shadow:0 6px 24px rgba(59,109,17,0.13)}
+.drill{background:var(--card);border:2px solid var(--sage-md);border-radius:14px;padding:0;display:none;box-shadow:0 6px 24px rgba(27,58,107,0.15)}
 .drill.on{display:block}
 .drill-hdr{display:flex;justify-content:space-between;align-items:center;background:var(--sage);border-radius:12px 12px 0 0;padding:16px 22px;margin-bottom:0}
 .drill-hdr h3{font-size:16px;font-weight:700;color:#fff}
@@ -169,12 +172,15 @@ tbody td{padding:9px 12px;font-size:12px;color:var(--gray-dk)}
 <body>
 
 <div class="hdr">
-  <div>
-    <h1>Finney's USA LLC — Workers' Compensation &amp; Loss Analysis</h1>
-    <p>Policy Years 2020–2026 · Class 9080 Restaurants-Full Service · State Compensation Insurance Fund · Bureau No. 9-99-57-71</p>
+  <div style="display:flex;align-items:center;gap:20px">
+    <img src="finneys_logo.svg" alt="Finney's" style="height:56px;width:auto;border-radius:4px;background:#fff;padding:4px 8px">
+    <div>
+      <h1>Finney's USA LLC — Workers' Compensation &amp; Loss Analysis</h1>
+      <p>Policy Years 2020–2026 · Class 9080 Restaurants-Full Service · State Compensation Insurance Fund · Bureau No. 9-99-57-71</p>
+    </div>
   </div>
   <div class="hdr-right">
-    <strong>E-Mod: 110%</strong>
+    <strong style="color:#F0CC6A">E-Mod: 110%</strong>
     May 10, 2026 · Data as of May 8, 2026
   </div>
 </div>
@@ -455,8 +461,8 @@ const fmtF=n=>'$'+Math.round(n).toLocaleString();
 
 // CAUSE COLOR MAP
 const CC={
-  'CT':'#534AB7','Slip & Fall':'#3B6D11','Laceration':'#BA7517',
-  'Struck By':'#0F6E56','Psych/Stress':'#D85A30','Puncture/Dog':'#854F0B','Strain':'#888780'
+  'CT':'#534AB7','Slip & Fall':'#1B3A6B','Laceration':'#C9920F',
+  'Struck By':'#0F6E56','Psych/Stress':'#D85A30','Puncture/Dog':'#A87000','Strain':'#888780'
 };
 
 // ─── TABS ───────────────────────────────────────────────────────────────────
@@ -476,7 +482,7 @@ function initClosedCharts(){
   new Chart($('closedYearChart'),{
     type:'bar',
     data:{labels:yrs.map(y=>y+'–'+(parseInt(y)+1).toString().slice(2)),
-      datasets:[{label:'Closed claims',data:yrs.map(y=>closedByYear[y]||0),backgroundColor:'#C0DD97cc',borderColor:'#639922',borderWidth:1,borderRadius:5}]},
+      datasets:[{label:'Closed claims',data:yrs.map(y=>closedByYear[y]||0),backgroundColor:'#93B4D9cc',borderColor:'#2563A8',borderWidth:1,borderRadius:5}]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Closed: '+c.parsed.y+' claim'+(c.parsed.y!==1?'s':'')}}},
       scales:{x:{grid:{color:gridColor}},y:{grid:{color:gridColor},ticks:{stepSize:1}}}}
@@ -486,7 +492,7 @@ function initClosedCharts(){
   new Chart($('closedCompChart'),{
     type:'doughnut',
     data:{labels:['Paid Losses','Paid Expense (ALAE)'],
-      datasets:[{data:[closedPL,closedPE],backgroundColor:['#C0DD97cc','#FAC775cc'],borderColor:['#639922','#BA7517'],borderWidth:2,hoverOffset:6}]},
+      datasets:[{data:[closedPL,closedPE],backgroundColor:['#93B4D9cc','#F0CC6Acc'],borderColor:['#2563A8','#C9920F'],borderWidth:2,hoverOffset:6}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
       plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:10}},
         tooltip:{callbacks:{label:c=>c.label+': '+fmtF(c.parsed)+' ('+Math.round(c.parsed/(closedPL+closedPE)*100)+'%)'}}}}
@@ -505,11 +511,11 @@ new Chart($('emodChart'),{
   data:{labels:EMOD.yrs,datasets:[
     {label:'E-Mod (%)',data:EMOD.vals,borderWidth:2.5,tension:.35,fill:false,
      pointRadius:6,pointHoverRadius:8,
-     pointBackgroundColor:EMOD.vals.map(v=>v>100?'#D85A30':v>85?'#BA7517':'#639922'),
-     pointBorderColor:EMOD.vals.map(v=>v>100?'#D85A30':v>85?'#BA7517':'#639922'),
-     segment:{borderColor:ctx=>ctx.p1.parsed.y>100?'#D85A30':ctx.p1.parsed.y>85?'#BA7517':'#639922'}},
+     pointBackgroundColor:EMOD.vals.map(v=>v>100?'#D85A30':v>85?'#C9920F':'#2563A8'),
+     pointBorderColor:EMOD.vals.map(v=>v>100?'#D85A30':v>85?'#C9920F':'#2563A8'),
+     segment:{borderColor:ctx=>ctx.p1.parsed.y>100?'#D85A30':ctx.p1.parsed.y>85?'#C9920F':'#2563A8'}},
     {label:'Industry Baseline (100%)',data:EMOD.yrs.map(()=>100),borderColor:'rgba(0,0,0,0.15)',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false},
-    {label:'Loss-Free (31%)',data:EMOD.yrs.map(()=>31),borderColor:'#C0DD97',borderDash:[3,5],borderWidth:1,pointRadius:0,fill:false}
+    {label:'Loss-Free (31%)',data:EMOD.yrs.map(()=>31),borderColor:'#93B4D9',borderDash:[3,5],borderWidth:1,pointRadius:0,fill:false}
   ]},
   options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
     plugins:{legend:{labels:{boxWidth:14,padding:14}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+'%'}}},
@@ -519,7 +525,7 @@ new Chart($('emodChart'),{
 
 // EMOD LIST
 $('emodList').innerHTML=[{y:'2026',v:110},{y:'2025',v:75},{y:'2024',v:43},{y:'2023',v:64},{y:'2022',v:79},{y:'2021',v:99},{y:'2020',v:49},{y:'2019',v:67},{y:'2018',v:77}].map(h=>{
-  const col=h.v>100?'#D85A30':h.v>85?'#BA7517':'#3B6D11';
+  const col=h.v>100?'#D85A30':h.v>85?'#C9920F':'#1B3A6B';
   return `<div class="er"><span class="ey">${h.y}</span><div class="ebw"><div class="ebi" style="width:${(h.v/130*100).toFixed(0)}%;background:${col}"></div></div><span class="ev" style="color:${col}">${h.v}%</span></div>`;
 }).join('');
 
@@ -535,10 +541,10 @@ const YD=[
 new Chart($('yearChart'),{
   type:'bar',
   data:{labels:YD.map(d=>d.l),datasets:[
-    {label:'Paid',data:YD.map(d=>d.paid),backgroundColor:'#C0DD97cc',borderColor:'#639922',borderWidth:1,borderRadius:3,stack:'s'},
+    {label:'Paid',data:YD.map(d=>d.paid),backgroundColor:'#93B4D9cc',borderColor:'#2563A8',borderWidth:1,borderRadius:3,stack:'s'},
     {label:'Open Reserves',data:YD.map(d=>d.open),backgroundColor:'#F5C4B3cc',borderColor:'#D85A30',borderWidth:1,borderRadius:3,stack:'s'},
-    {label:'# Claims',data:YD.map(d=>d.n),type:'line',borderColor:'#BA7517',backgroundColor:'transparent',
-     pointBackgroundColor:'#BA7517',pointRadius:5,borderWidth:2,tension:.3,yAxisID:'y2',stack:undefined}
+    {label:'# Claims',data:YD.map(d=>d.n),type:'line',borderColor:'#C9920F',backgroundColor:'transparent',
+     pointBackgroundColor:'#C9920F',pointRadius:5,borderWidth:2,tension:.3,yAxisID:'y2',stack:undefined}
   ]},
   options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
     plugins:{legend:{labels:{boxWidth:14,padding:14}},
@@ -554,7 +560,7 @@ new Chart($('yearChart'),{
 // COMPOSITION CHART
 new Chart($('compChart'),{
   type:'doughnut',
-  data:{labels:['Paid','Open Reserves'],datasets:[{data:[357027,688263],backgroundColor:['#C0DD97cc','#F5C4B3cc'],borderColor:['#639922','#D85A30'],borderWidth:2,hoverOffset:6}]},
+  data:{labels:['Paid','Open Reserves'],datasets:[{data:[357027,688263],backgroundColor:['#93B4D9cc','#F5C4B3cc'],borderColor:['#2563A8','#D85A30'],borderWidth:2,hoverOffset:6}]},
   options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
     plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:12}},
       tooltip:{callbacks:{label:c=>c.label+': '+fmtF(c.parsed)+' ('+Math.round(c.parsed/1045290*100)+'%)'}}}}
@@ -658,11 +664,11 @@ renderCauseTable();
 
 // ─── OPEN CLAIMS TAB ─────────────────────────────────────────────────────────
 new Chart($('ocCountChart'),{
-  type:'doughnut',data:{labels:['Open (22)','Closed (16)'],datasets:[{data:[22,16],backgroundColor:['#F5C4B3cc','#C0DD97cc'],borderColor:['#D85A30','#639922'],borderWidth:2,hoverOffset:6}]},
+  type:'doughnut',data:{labels:['Open (22)','Closed (16)'],datasets:[{data:[22,16],backgroundColor:['#F5C4B3cc','#93B4D9cc'],borderColor:['#D85A30','#2563A8'],borderWidth:2,hoverOffset:6}]},
   options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:10}},tooltip:{callbacks:{label:c=>c.label+' — '+Math.round(c.parsed/38*100)+'% of all claims'}}}}
 });
 new Chart($('ocAmtChart'),{
-  type:'doughnut',data:{labels:['Open Reserves ($688K)','Paid ($357K)'],datasets:[{data:[688263,357027],backgroundColor:['#F5C4B3cc','#C0DD97cc'],borderColor:['#D85A30','#639922'],borderWidth:2,hoverOffset:6}]},
+  type:'doughnut',data:{labels:['Open Reserves ($688K)','Paid ($357K)'],datasets:[{data:[688263,357027],backgroundColor:['#F5C4B3cc','#93B4D9cc'],borderColor:['#D85A30','#2563A8'],borderWidth:2,hoverOffset:6}]},
   options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:10}},tooltip:{callbacks:{label:c=>c.label+' ('+Math.round(c.parsed/1045290*100)+'%)' }}}}
 });
 
