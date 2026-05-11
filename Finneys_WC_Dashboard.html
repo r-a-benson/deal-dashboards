@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finney's WC & Loss Analysis</title>
+<style>
+:root {
+  --bg:#F8F7F4; --card:#FFFFFF; --surf:#F1EFE8; --surf2:#E8E6DF;
+  --sage-dk:#27500A; --sage:#3B6D11; --sage-md:#639922; --sage-lt:#C0DD97; --sage-xl:#EAF3DE;
+  --coral-dk:#712B13; --coral:#D85A30; --coral-md:#F0997B; --coral-lt:#F5C4B3; --coral-xl:#FAECE7;
+  --amber-dk:#633806; --amber:#854F0B; --amber-md:#BA7517; --amber-lt:#FAC775; --amber-xl:#FAEEDA;
+  --gray-dk:#2C2C2A; --gray:#5F5E5A; --gray-md:#888780; --gray-lt:#D3D1C7; --gray-xl:#F1EFE8;
+  --purple:#534AB7; --purple-lt:#EEEDFE; --teal:#0F6E56; --teal-lt:#E1F5EE;
+  --border:rgba(0,0,0,0.07); --border2:rgba(0,0,0,0.13);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--gray-dk);font-family:'Segoe UI',-apple-system,sans-serif;font-size:14px;line-height:1.5}
+
+.hdr{background:var(--sage);color:#fff;padding:18px 32px;display:flex;justify-content:space-between;align-items:center}
+.hdr h1{font-size:19px;font-weight:600;letter-spacing:.2px}
+.hdr p{font-size:12px;opacity:.75;margin-top:3px}
+.hdr-right{text-align:right;font-size:12px;opacity:.85}
+.hdr-right strong{font-size:20px;color:#C0DD97;display:block;margin-bottom:2px}
+
+.alert-bar{background:var(--coral-xl);border-bottom:1px solid var(--coral-lt);padding:11px 32px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--gray-dk)}
+.alert-bar strong{color:var(--coral-dk)}
+
+.tab-nav{background:var(--card);border-bottom:1px solid var(--border2);padding:0 32px;display:flex;gap:0;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,0.05)}
+.tb{padding:13px 18px;font-size:13px;font-weight:500;color:var(--gray);border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;transition:color .15s;white-space:nowrap}
+.tb:hover{color:var(--sage)}
+.tb.on{color:var(--sage);border-bottom-color:var(--sage)}
+.tc{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:5px;background:var(--sage-xl);color:var(--sage)}
+.tb.on .tc{background:var(--sage);color:#fff}
+.tc.red{background:var(--coral-xl);color:var(--coral-dk)}
+.tc.amber{background:var(--amber-xl);color:var(--amber)}
+
+.page{padding:24px 32px;max-width:1440px;margin:0 auto}
+.panel{display:none}.panel.on{display:block}
+
+.sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--gray-md);margin:22px 0 12px}
+.sec:first-child{margin-top:0}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:16px 18px;border-top:3px solid transparent;position:relative}
+.kpi.coral{border-top-color:var(--coral)}.kpi.amber{border-top-color:var(--amber-md)}.kpi.sage{border-top-color:var(--sage-md)}.kpi.gray{border-top-color:var(--gray-md)}
+.kl{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--gray-md);margin-bottom:5px}
+.kv{font-size:26px;font-weight:600;line-height:1;margin-bottom:3px}
+.kpi.coral .kv{color:var(--coral-dk)}.kpi.amber .kv{color:var(--amber)}.kpi.sage .kv{color:var(--sage)}.kpi.gray .kv{color:var(--gray)}
+.ks{font-size:11px;color:var(--gray-md)}
+.kch{font-size:11px;margin-top:4px;font-weight:500}
+.kch.bad{color:var(--coral)}.kch.good{color:var(--sage-md)}.kch.warn{color:var(--amber-md)}
+
+/* CARDS / CHARTS */
+.row{display:grid;gap:16px;margin-bottom:16px}
+.r2{grid-template-columns:3fr 2fr}.r2b{grid-template-columns:1fr 1fr}.r3{grid-template-columns:2fr 1fr 1fr}
+.card{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:20px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray-dk)}
+.card .sub{font-size:11px;color:var(--gray-md);margin:3px 0 14px}
+.ch-wrap{position:relative}
+
+/* EMOD ROWS */
+.er{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--surf2)}
+.er:last-child{border-bottom:none}
+.ey{width:34px;font-size:12px;color:var(--gray-md)}
+.ebw{flex:1;height:8px;background:var(--surf);border-radius:4px;overflow:hidden}
+.ebi{height:100%;border-radius:4px}
+.ev{width:40px;text-align:right;font-size:13px;font-weight:600}
+
+/* LOCATION GRID */
+.loc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+.lc{background:var(--card);border:2px solid var(--border2);border-radius:10px;padding:16px;cursor:pointer;transition:border-color .15s,background .15s}
+.lc:hover,.lc.on{border-color:var(--sage-md);background:var(--sage-xl)}
+.lc h4{font-size:13px;font-weight:600;color:var(--sage);margin-bottom:6px}
+.lc .lc-n{font-size:22px;font-weight:600;color:var(--gray-dk)}
+.lc .lc-s{font-size:11px;color:var(--gray-md);margin-top:2px}
+.lc .lc-${font-size:12px;font-weight:500;color:var(--amber);margin-top:5px}
+.lc-bar{height:4px;background:var(--gray-xl);border-radius:2px;margin-top:10px;overflow:hidden}
+.lc-bar div{height:100%;border-radius:2px;background:var(--sage-md)}
+
+/* DRILL */
+.drill{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:20px;display:none}
+.drill.on{display:block}
+.drill-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.drill-hdr h3{font-size:15px;font-weight:600;color:var(--sage)}
+.close-btn{border:1px solid var(--border2);background:var(--surf);padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--gray)}
+
+/* CAUSE FILTER */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.chip{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--card);color:var(--gray);transition:all .15s}
+.chip.on,.chip:hover{background:var(--sage);color:#fff;border-color:var(--sage)}
+
+/* CAUSE LEGEND */
+.cl-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--surf2)}
+.cl-item:last-child{border-bottom:none}
+.cl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.cl-name{flex:1;font-size:12px}
+.cl-n{width:28px;font-size:12px;font-weight:600;text-align:center}
+.cl-bw{width:80px;height:5px;background:var(--surf);border-radius:3px;overflow:hidden}
+.cl-b{height:100%;border-radius:3px}
+.cl-pct{width:32px;font-size:11px;color:var(--gray-md);text-align:right}
+.cl-${width:60px;font-size:11px;color:var(--amber);text-align:right}
+
+/* OPEN STATS */
+.os-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.os{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:16px;text-align:center}
+.os-v{font-size:26px;font-weight:600}
+.os-l{font-size:11px;color:var(--gray-md);margin-top:4px}
+.os.coral .os-v{color:var(--coral-dk)}
+.os.amber .os-v{color:var(--amber)}
+.os.sage .os-v{color:var(--sage)}
+.os.gray .os-v{color:var(--gray)}
+
+/* TABLE */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gray-md);padding:9px 12px;text-align:left;background:var(--surf);border-bottom:1px solid var(--border2);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--surf)}
+tbody tr:hover{background:#FAFAF8}
+tbody td{padding:9px 12px;font-size:12px;color:var(--gray-dk)}
+.td-bold{font-weight:500}
+.rdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--coral);margin-right:5px;vertical-align:middle}
+.badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:600}
+.b-open{background:var(--coral-xl);color:var(--coral-dk)}
+.b-closed{background:var(--sage-xl);color:var(--sage)}
+.a-hi{color:var(--coral-dk);font-weight:600}
+.a-mid{color:var(--amber);font-weight:500}
+.a-lo{color:var(--gray)}
+
+/* RECOMMENDATIONS */
+.reco-intro{background:var(--amber-xl);border:1px solid var(--amber-lt);border-radius:10px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:flex-start;gap:14px}
+.reco-intro .ri-icon{font-size:22px;flex-shrink:0}
+.reco-intro strong{font-size:14px;color:var(--amber);display:block;margin-bottom:4px}
+.reco-intro p{font-size:13px;color:var(--gray);line-height:1.6}
+.reco-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.rc{border-radius:12px;padding:22px;border:1px solid var(--border2);background:var(--card)}
+.rc.high{border-left:5px solid var(--coral);background:linear-gradient(to right,var(--coral-xl) 0%,var(--card) 55%)}
+.rc.med{border-left:5px solid var(--amber-md);background:linear-gradient(to right,var(--amber-xl) 0%,var(--card) 55%)}
+.rc.low{border-left:5px solid var(--sage-md);background:linear-gradient(to right,var(--sage-xl) 0%,var(--card) 55%)}
+.rc-hdr{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.rc-icon{font-size:22px}
+.rc-pri{font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:3px}
+.rc.high .rc-pri{color:var(--coral)}.rc.med .rc-pri{color:var(--amber-md)}.rc.low .rc-pri{color:var(--sage-md)}
+.rc h4{font-size:14px;font-weight:600;line-height:1.35}
+.rc.high h4{color:var(--coral-dk)}.rc.med h4{color:var(--amber)}.rc.low h4{color:var(--sage)}
+.rc-body{font-size:12px;color:var(--gray);line-height:1.65;margin-bottom:12px}
+.rc-acts{list-style:none}
+.rc-acts li{font-size:12px;color:var(--gray-dk);padding:4px 0;display:flex;align-items:flex-start;gap:6px}
+.rc-acts li::before{content:'→';font-weight:700;flex-shrink:0}
+.rc.high .rc-acts li::before{color:var(--coral)}.rc.med .rc-acts li::before{color:var(--amber-md)}.rc.low .rc-acts li::before{color:var(--sage-md)}
+.rc-impact{margin-top:14px;padding:10px 12px;border-radius:6px;font-size:11px;font-weight:500;line-height:1.5}
+.rc.high .rc-impact{background:var(--coral-xl);color:var(--coral-dk)}
+.rc.med .rc-impact{background:var(--amber-xl);color:var(--amber)}
+.rc.low .rc-impact{background:var(--sage-xl);color:var(--sage)}
+
+.ftr{border-top:1px solid var(--border2);padding:13px 32px;display:flex;justify-content:space-between;font-size:11px;color:var(--gray-md);margin-top:8px}
+
+/* stat mini-cards in drill */
+.ds-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ds{background:var(--surf);border-radius:8px;padding:12px;text-align:center}
+.ds-v{font-size:18px;font-weight:600}.ds-l{font-size:10px;color:var(--gray-md);margin-top:2px}
+.ds.coral .ds-v{color:var(--coral-dk)}.ds.amber .ds-v{color:var(--amber)}.ds.sage .ds-v{color:var(--sage)}.ds.gray .ds-v{color:var(--gray)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <h1>Finney's USA LLC — Workers' Compensation &amp; Loss Analysis</h1>
+    <p>Policy Years 2020–2026 · Class 9080 Restaurants-Full Service · State Compensation Insurance Fund · Bureau No. 9-99-57-71</p>
+  </div>
+  <div class="hdr-right">
+    <strong>E-Mod: 110%</strong>
+    May 10, 2026 · Data as of May 8, 2026
+  </div>
+</div>
+
+<div class="alert-bar">
+  ⚠ <span><strong>Alert:</strong> Experience Modification increased from <strong>75%</strong> (2025) to <strong>110%</strong> (2026) — above the 100% industry baseline for the first time. Loss-free potential mod is <strong>31%</strong>. See the <a href="#" onclick="switchTab('reco');return false;" style="color:var(--coral-dk);font-weight:600">Recommendations</a> tab for action steps.</span>
+</div>
+
+<div class="tab-nav">
+  <button class="tb on" onclick="switchTab('overview',this)">Overview</button>
+  <button class="tb" onclick="switchTab('location',this)">By Location <span class="tc">9</span></button>
+  <button class="tb" onclick="switchTab('cause',this)">Cause of Loss <span class="tc">7</span></button>
+  <button class="tb" onclick="switchTab('open',this)">Open Claims <span class="tc red">22</span></button>
+  <button class="tb" onclick="switchTab('reco',this)">Recommendations <span class="tc amber">6</span></button>
+</div>
+
+<div class="page">
+
+<!-- ══════════════════ OVERVIEW ══════════════════ -->
+<div class="panel on" id="panel-overview">
+  <div class="kpi-row">
+    <div class="kpi coral">
+      <div class="kl">2026 E-Mod</div>
+      <div class="kv">110%</div>
+      <div class="ks">Above industry baseline</div>
+      <div class="kch bad">▲ +35 pts from 75% in 2025</div>
+    </div>
+    <div class="kpi amber">
+      <div class="kl">Total Incurred — All Years</div>
+      <div class="kv">$1.05M</div>
+      <div class="ks">Paid + open reserves</div>
+      <div class="kch bad">▲ 98% concentrated in 2023–26</div>
+    </div>
+    <div class="kpi coral">
+      <div class="kl">Open Reserves</div>
+      <div class="kv">$688K</div>
+      <div class="ks">Future liability, 22 open claims</div>
+      <div class="kch bad">▲ 66% of total incurred</div>
+    </div>
+    <div class="kpi sage">
+      <div class="kl">Total Claims (6 Years)</div>
+      <div class="kv">38</div>
+      <div class="ks">3 claims 2020–22, 35 since 2023</div>
+      <div class="kch bad">▲ 11× increase in claim frequency</div>
+    </div>
+    <div class="kpi gray">
+      <div class="kl">Loss-Free Potential Mod</div>
+      <div class="kv">31%</div>
+      <div class="ks">Max savings if zero losses</div>
+      <div class="kch good">▼ 79 pt improvement opportunity</div>
+    </div>
+  </div>
+
+  <div class="sec">Experience Modification — 10-Year History</div>
+  <div class="row r2">
+    <div class="card">
+      <h3>E-Mod Trend 2018–2026</h3>
+      <p class="sub">Below 100% = favorable discount · Above 100% = surcharge · Loss-free minimum: 31%</p>
+      <div class="ch-wrap" style="height:250px"><canvas id="emodChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Year-by-Year E-Mod</h3>
+      <p class="sub">Relative to 100% industry baseline</p>
+      <div id="emodList"></div>
+    </div>
+  </div>
+
+  <div class="sec">Loss History by Policy Year</div>
+  <div class="row r2">
+    <div class="card">
+      <h3>Incurred Losses &amp; Claim Count by Policy Year</h3>
+      <p class="sub">Bars = paid + open reserves · Line = claim count · *2025–26 is partial year</p>
+      <div class="ch-wrap" style="height:250px"><canvas id="yearChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Portfolio Composition</h3>
+      <p class="sub">$357K paid vs. $688K open reserves</p>
+      <div class="ch-wrap" style="height:200px"><canvas id="compChart"></canvas></div>
+      <div style="margin-top:12px;background:var(--surf);border-radius:8px;padding:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:7px">
+          <span style="font-size:12px;color:var(--gray-md)">Total Paid</span>
+          <span style="font-size:13px;font-weight:600;color:var(--sage)">$357,027</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:7px">
+          <span style="font-size:12px;color:var(--gray-md)">Open Reserves</span>
+          <span style="font-size:13px;font-weight:600;color:var(--coral-dk)">$688,263</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border2)">
+          <span style="font-size:12px;font-weight:600">Total Incurred</span>
+          <span style="font-size:14px;font-weight:600;color:var(--amber)">$1,045,290</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ LOCATION ══════════════════ -->
+<div class="panel" id="panel-location">
+  <p style="font-size:13px;color:var(--gray-md);margin-bottom:16px">Click any location card to drill into its claims, open reserves, and cause breakdown.</p>
+  <div class="loc-grid" id="locGrid"></div>
+  <div class="drill" id="drill">
+    <div class="drill-hdr">
+      <div>
+        <h3 id="drillTitle">—</h3>
+        <div style="font-size:12px;color:var(--gray-md);margin-top:2px" id="drillSub"></div>
+      </div>
+      <button class="close-btn" onclick="closeDrill()">✕ Close</button>
+    </div>
+    <div class="row r2b" style="margin-bottom:16px">
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gray-md);margin-bottom:10px">Summary</div>
+        <div class="ds-grid" id="drillStats"></div>
+      </div>
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gray-md);margin-bottom:10px">Cause Breakdown</div>
+        <div class="ch-wrap" style="height:170px"><canvas id="drillCause"></canvas></div>
+      </div>
+    </div>
+    <div class="tw" id="drillTable"></div>
+  </div>
+</div>
+
+<!-- ══════════════════ CAUSE ══════════════════ -->
+<div class="panel" id="panel-cause">
+  <div class="row r2">
+    <div class="card">
+      <h3>Cause of Loss Distribution</h3>
+      <p class="sub">38 total claims across all policy years</p>
+      <div class="ch-wrap" style="height:260px"><canvas id="causePie"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Breakdown by Cause</h3>
+      <p class="sub">Claim count, share, and total incurred</p>
+      <div id="causeLegend"></div>
+    </div>
+  </div>
+  <div style="margin-top:16px">
+    <div class="chips" id="causeChips"></div>
+    <div class="card" style="padding:0">
+      <div class="tw" id="causeTbl"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ OPEN CLAIMS ══════════════════ -->
+<div class="panel" id="panel-open">
+  <div class="os-row">
+    <div class="os coral"><div class="os-v">22</div><div class="os-l">Open claims</div></div>
+    <div class="os coral"><div class="os-v">$688K</div><div class="os-l">Total open reserves</div></div>
+    <div class="os amber"><div class="os-v">$31,285</div><div class="os-l">Avg reserve / open claim</div></div>
+    <div class="os sage"><div class="os-v">16</div><div class="os-l">Closed claims</div></div>
+  </div>
+  <div class="row r2b">
+    <div class="card">
+      <h3>Open vs. Closed — Claim Count</h3>
+      <p class="sub">58% of all claims remain open</p>
+      <div class="ch-wrap" style="height:210px"><canvas id="ocCountChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Open vs. Closed — Dollars</h3>
+      <p class="sub">Open reserves = 66% of total incurred</p>
+      <div class="ch-wrap" style="height:210px"><canvas id="ocAmtChart"></canvas></div>
+    </div>
+  </div>
+  <div class="sec">Open Claims — Ranked by Reserve Amount</div>
+  <div class="card" style="padding:0"><div class="tw" id="openTbl"></div></div>
+</div>
+
+<!-- ══════════════════ RECOMMENDATIONS ══════════════════ -->
+<div class="panel" id="panel-reco">
+  <div class="reco-intro">
+    <div class="ri-icon">📋</div>
+    <div>
+      <strong>Priority Action Plan</strong>
+      <p>Based on 38 claims across 6 policy years, $688K in open reserves, and an E-Mod that has crossed above 100% for the first time. High-priority items below target the root causes driving claim frequency and severity. Sustained improvement across 2–3 rating periods is needed to return the E-Mod toward its loss-free potential of 31%.</p>
+    </div>
+  </div>
+  <div class="reco-grid" id="recoGrid"></div>
+</div>
+
+</div><!-- end page -->
+
+<div class="ftr">
+  <span>Finney's USA LLC · Bureau No. 9-99-57-71 · State Compensation Insurance Fund · Policy 9382082025</span>
+  <span>Source: Loss Run 2020–2026 · Exp Mod Worksheets 2025 &amp; 2026 · Risk Summary Report · Data as of May 8, 2026</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const CLAIMS = [
+  {id:1, yr:'2020',claimant:'Pencek, Matthew',         loc:'Santa Barbara',   cause:'Slip & Fall',  pl:698,   pe:80,    ol:0,    oe:0,    st:'Closed',rep:false,desc:'Slipped and fell, right/left knee injury'},
+  {id:2, yr:'2020',claimant:'Durtschi, Catrina',       loc:'Porter Ranch',    cause:'Laceration',   pl:4920,  pe:2802,  ol:0,    oe:0,    st:'Closed',rep:false,desc:'Cut hand on bottle pour spout — severity initially underestimated'},
+  {id:3, yr:'2022',claimant:'Narvaez, Carlos',         loc:'Various',         cause:'CT',           pl:20000, pe:929,   ol:0,    oe:0,    st:'Closed',rep:false,desc:'All other cumulative injury'},
+  {id:4, yr:'2023',claimant:'Guerrero, Maria De Jesus',loc:'Porter Ranch',    cause:'CT',           pl:41893, pe:7369,  ol:14496,oe:3250, st:'Open',  rep:false,desc:'Accepted/litigated CT — cook, hired 5 months before injury date'},
+  {id:5, yr:'2023',claimant:'Rivas, Ruth',             loc:'Westlake Village',cause:'CT',           pl:2017,  pe:33,    ol:16389,oe:1243, st:'Open',  rep:true, desc:'Denied CT — dishwasher, neck/shoulder, resigned during claim'},
+  {id:6, yr:'2023',claimant:'Rivas, Ruth',             loc:'Westlake Village',cause:'CT',           pl:3322,  pe:6458,  ol:20684,oe:1408, st:'Open',  rep:true, desc:'Denied CT — repetitive motion, companion claim to above'},
+  {id:7, yr:'2023',claimant:'Rodriguez, Santiago',     loc:'Redlands',        cause:'Slip & Fall',  pl:12553, pe:5842,  ol:0,    oe:0,    st:'Closed',rep:false,desc:'Denied/litigated — slipped on wet surface, leg injury'},
+  {id:8, yr:'2023',claimant:'Angulo, Sarahi',          loc:'Redlands',        cause:'Psych/Stress', pl:14970, pe:6506,  ol:0,    oe:0,    st:'Closed',rep:true, desc:'Psych claim — stress, insomnia, anxiety, depression'},
+  {id:9, yr:'2023',claimant:'Garibay, Mario',          loc:'Porter Ranch',    cause:'CT',           pl:4665,  pe:34,    ol:25140,oe:7164, st:'Open',  rep:false,desc:'CT — wrist and hand, repetitive kitchen work'},
+  {id:10,yr:'2023',claimant:'Sallow, Sam',             loc:'Laguna Beach',    cause:'Puncture/Dog', pl:31592, pe:16411, ol:8500, oe:0,    st:'Open',  rep:true, desc:'Dog bite to left lower leg while serving a table'},
+  {id:11,yr:'2023',claimant:'Doradoultreras, Maximino',loc:'Burbank',         cause:'CT',           pl:0,     pe:352,   ol:10000,oe:4648, st:'Open',  rep:false,desc:'CT — neck and hand injuries'},
+  {id:12,yr:'2023',claimant:'Sallow, Sam',             loc:'Westlake Village',cause:'CT',           pl:26574, pe:1369,  ol:0,    oe:0,    st:'Closed',rep:true, desc:'CT — spine, extremities, multiple body parts'},
+  {id:13,yr:'2023',claimant:'Blaylock, Tessa',         loc:'Burbank',         cause:'CT',           pl:3465,  pe:8687,  ol:56043,oe:4875, st:'Open',  rep:false,desc:'Denied CT — shoulder, knee, psych, litigated'},
+  {id:14,yr:'2023',claimant:'Martinez, Carlos',        loc:'Burbank',         cause:'Slip & Fall',  pl:19366, pe:1841,  ol:27917,oe:833,  st:'Open',  rep:true, desc:'Accepted/litigated — slipped in kitchen, right knee strain'},
+  {id:15,yr:'2023',claimant:'Angulo, Sarahi',          loc:'Laguna Beach',    cause:'CT',           pl:5000,  pe:0,     ol:0,    oe:0,    st:'Closed',rep:true, desc:'CT — head, depression, anxiety, nervous system'},
+  {id:16,yr:'2023',claimant:'Martinez, Carlos',        loc:'Burbank',         cause:'CT',           pl:197,   pe:495,   ol:46877,oe:2645, st:'Open',  rep:true, desc:'Denied CT — multi-body extremities, litigated'},
+  {id:17,yr:'2024',claimant:'Monterrubio, Gustavo',    loc:'Westlake Village',cause:'CT',           pl:21685, pe:4547,  ol:0,    oe:0,    st:'Closed',rep:false,desc:'Denied CT — psych/stress/circulatory, litigated, 53yo busser'},
+  {id:18,yr:'2024',claimant:'Garcia, Rember',          loc:'Porter Ranch',    cause:'CT',           pl:5955,  pe:7187,  ol:18541,oe:10720,st:'Open',  rep:false,desc:'CT — head, arms, back, shoulders, knees, multi-body'},
+  {id:19,yr:'2024',claimant:'Molohua, Edgar',          loc:'Laguna Beach',    cause:'CT',           pl:0,     pe:1774,  ol:0,    oe:0,    st:'Closed',rep:false,desc:'CT — back/spine, repetitive movement'},
+  {id:20,yr:'2024',claimant:'Lowery, Chance',          loc:'San Luis Obispo', cause:'Strain',       pl:4099,  pe:4462,  ol:10251,oe:0,    st:'Open',  rep:false,desc:'Back strain — suspicious delayed report, highly questionable'},
+  {id:21,yr:'2024',claimant:'Torres Gayosso, Vanesa',  loc:'Laguna Beach',    cause:'Struck By',    pl:7279,  pe:476,   ol:0,    oe:0,    st:'Closed',rep:false,desc:'Cutting board fell on right big toe — accepted, non-litigated'},
+  {id:22,yr:'2024',claimant:'Torres Cruz, Arturo',     loc:'Laguna Beach',    cause:'CT',           pl:953,   pe:8,     ol:5199, oe:147,  st:'Open',  rep:true, desc:'Specific injury — neck and back, litigated (claim 1 of 3)'},
+  {id:23,yr:'2024',claimant:'Torres Cruz, Arturo',     loc:'Laguna Beach',    cause:'CT',           pl:1225,  pe:16,    ol:23187,oe:5984, st:'Open',  rep:true, desc:'CT — neck, wrist, back, shoulder, multi-body (claim 2 of 3)'},
+  {id:24,yr:'2024',claimant:'Torres Cruz, Arturo',     loc:'Los Angeles',     cause:'CT',           pl:0,     pe:13,    ol:7152, oe:137,  st:'Open',  rep:true, desc:'CT — head, nervous system, psych/stress (claim 3 of 3)'},
+  {id:25,yr:'2024',claimant:'Raxcaco, Katherine',      loc:'Orange',          cause:'Laceration',   pl:2469,  pe:345,   ol:0,    oe:0,    st:'Closed',rep:false,desc:'Tendon cut washing knives — ER visit, possible surgery'},
+  {id:26,yr:'2024',claimant:'Lopez, Esteban',          loc:'Redlands',        cause:'CT',           pl:19369, pe:4214,  ol:0,    oe:0,    st:'Closed',rep:false,desc:'Denied CT — head, circulatory, wrists, litigated, 45yo cook'},
+  {id:27,yr:'2024',claimant:'Mateo Sixto, Rojas',      loc:'Laguna Beach',    cause:'CT',           pl:0,     pe:302,   ol:14000,oe:12198,st:'Open',  rep:true, desc:'CT — back, left shoulder, repetitive work duties'},
+  {id:28,yr:'2024',claimant:'Ramos, Jorge De Jesus',   loc:'Ventura',         cause:'Struck By',    pl:0,     pe:0,     ol:21456,oe:1775, st:'Open',  rep:true, desc:'Denied — chest injury, litigated, dis prep worker'},
+  {id:29,yr:'2024',claimant:'Molohua, Gustavo',        loc:'Laguna Beach',    cause:'CT',           pl:0,     pe:0,     ol:18773,oe:5800, st:'Open',  rep:true, desc:'CT — head/nose, cumulative, litigated'},
+  {id:30,yr:'2024',claimant:'Hernandez, Jorge',        loc:'Westlake Village',cause:'CT',           pl:0,     pe:0,     ol:14399,oe:11600,st:'Open',  rep:false,desc:'Denied CT — psych/stress, litigated, 31yo busser'},
+  {id:31,yr:'2024',claimant:'Renteria, Juan Manuel',   loc:'Laguna Beach',    cause:'CT',           pl:0,     pe:0,     ol:10000,oe:7664, st:'Open',  rep:true, desc:'CT — wrist and back, cumulative injury'},
+  {id:32,yr:'2025',claimant:'Silva, Emanuel Armenta',  loc:'Claremont',       cause:'Slip & Fall',  pl:9562,  pe:33,    ol:20817,oe:1533, st:'Open',  rep:false,desc:'Right knee — fall on same level, traumatic'},
+  {id:33,yr:'2025',claimant:'Mejia Ordonez, Emilio',   loc:'Porter Ranch',    cause:'CT',           pl:620,   pe:2176,  ol:29861,oe:5425, st:'Open',  rep:false,desc:'Spinal cord / back — CT, traumatic'},
+  {id:34,yr:'2025',claimant:'Renteria, Juan Manuel',   loc:'Camarillo',       cause:'CT',           pl:184,   pe:9,     ol:41092,oe:5200, st:'Open',  rep:true, desc:'Physical/Mental CT — traumatic (2nd claim for this individual)'},
+  {id:35,yr:'2025',claimant:'Molohua, Gustavo',        loc:'Laguna Beach',    cause:'CT',           pl:249,   pe:359,   ol:13416,oe:1800, st:'Open',  rep:true, desc:'Soft tissue head — CT, traumatic (3rd claim for this individual)'},
+  {id:36,yr:'2025',claimant:'Rojas Mateo, Sixto',      loc:'Laguna Beach',    cause:'CT',           pl:150,   pe:2492,  ol:19734,oe:1208, st:'Open',  rep:true, desc:'Left shoulder — CT, traumatic (2nd claim for this individual)'},
+  {id:37,yr:'2025',claimant:'Ramos, Jorge De Jesus',   loc:'Ventura',         cause:'CT',           pl:17,    pe:7,     ol:38211,oe:5493, st:'Open',  rep:true, desc:'Soft tissue neck — CT, traumatic (2nd claim for this individual)'},
+  {id:38,yr:'2025',claimant:'Neri, Victor',            loc:'Goleta',          cause:'Slip & Fall',  pl:3951,  pe:400,   ol:51714,oe:1664, st:'Open',  rep:false,desc:'Lower back — slip on grease spill, traumatic'},
+];
+CLAIMS.forEach(c=>{c.total=c.pl+c.pe+c.ol+c.oe; c.openTotal=c.ol+c.oe; c.paidTotal=c.pl+c.pe;});
+
+// ─── HELPERS ────────────────────────────────────────────────────────────────
+const $=id=>document.getElementById(id);
+const fmt=n=>n>=1000000?'$'+(n/1000000).toFixed(2)+'M':n>=1000?'$'+Math.round(n/1000)+'K':'$'+Math.round(n);
+const fmtF=n=>'$'+Math.round(n).toLocaleString();
+
+// CAUSE COLOR MAP
+const CC={
+  'CT':'#534AB7','Slip & Fall':'#3B6D11','Laceration':'#BA7517',
+  'Struck By':'#0F6E56','Psych/Stress':'#D85A30','Puncture/Dog':'#854F0B','Strain':'#888780'
+};
+
+// ─── TABS ───────────────────────────────────────────────────────────────────
+function switchTab(name, btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
+  $('panel-'+name).classList.add('on');
+  if(btn) btn.classList.add('on');
+  else document.querySelectorAll('.tb').forEach(b=>{if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+name+"'"))b.classList.add('on');});
+}
+
+Chart.defaults.font.family="'Segoe UI',sans-serif";
+Chart.defaults.color='#5F5E5A';
+Chart.defaults.font.size=11;
+const gridColor='rgba(0,0,0,0.05)';
+
+// ─── EMOD CHART ─────────────────────────────────────────────────────────────
+const EMOD={yrs:['2018','2019','2020','2021','2022','2023','2024','2025','2026'],vals:[77,67,49,99,79,64,43,75,110]};
+new Chart($('emodChart'),{
+  type:'line',
+  data:{labels:EMOD.yrs,datasets:[
+    {label:'E-Mod (%)',data:EMOD.vals,borderWidth:2.5,tension:.35,fill:false,
+     pointRadius:6,pointHoverRadius:8,
+     pointBackgroundColor:EMOD.vals.map(v=>v>100?'#D85A30':v>85?'#BA7517':'#639922'),
+     pointBorderColor:EMOD.vals.map(v=>v>100?'#D85A30':v>85?'#BA7517':'#639922'),
+     segment:{borderColor:ctx=>ctx.p1.parsed.y>100?'#D85A30':ctx.p1.parsed.y>85?'#BA7517':'#639922'}},
+    {label:'Industry Baseline (100%)',data:EMOD.yrs.map(()=>100),borderColor:'rgba(0,0,0,0.15)',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false},
+    {label:'Loss-Free (31%)',data:EMOD.yrs.map(()=>31),borderColor:'#C0DD97',borderDash:[3,5],borderWidth:1,pointRadius:0,fill:false}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{labels:{boxWidth:14,padding:14}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+'%'}}},
+    scales:{x:{grid:{color:gridColor}},y:{min:0,max:130,grid:{color:gridColor},ticks:{callback:v=>v+'%'}}}
+  }
+});
+
+// EMOD LIST
+$('emodList').innerHTML=[{y:'2026',v:110},{y:'2025',v:75},{y:'2024',v:43},{y:'2023',v:64},{y:'2022',v:79},{y:'2021',v:99},{y:'2020',v:49},{y:'2019',v:67},{y:'2018',v:77}].map(h=>{
+  const col=h.v>100?'#D85A30':h.v>85?'#BA7517':'#3B6D11';
+  return `<div class="er"><span class="ey">${h.y}</span><div class="ebw"><div class="ebi" style="width:${(h.v/130*100).toFixed(0)}%;background:${col}"></div></div><span class="ev" style="color:${col}">${h.v}%</span></div>`;
+}).join('');
+
+// ─── YEAR CHART ─────────────────────────────────────────────────────────────
+const YD=[
+  {l:'2020–21',paid:8500,  open:0,     n:2},
+  {l:'2021–22',paid:0,     open:0,     n:0},
+  {l:'2022–23',paid:20929, open:0,     n:1},
+  {l:'2023–24',paid:221011,open:252112,n:14},
+  {l:'2024–25',paid:86378, open:198983,n:16},
+  {l:'2025–26*',paid:20209,open:237168,n:8},
+];
+new Chart($('yearChart'),{
+  type:'bar',
+  data:{labels:YD.map(d=>d.l),datasets:[
+    {label:'Paid',data:YD.map(d=>d.paid),backgroundColor:'#C0DD97cc',borderColor:'#639922',borderWidth:1,borderRadius:3,stack:'s'},
+    {label:'Open Reserves',data:YD.map(d=>d.open),backgroundColor:'#F5C4B3cc',borderColor:'#D85A30',borderWidth:1,borderRadius:3,stack:'s'},
+    {label:'# Claims',data:YD.map(d=>d.n),type:'line',borderColor:'#BA7517',backgroundColor:'transparent',
+     pointBackgroundColor:'#BA7517',pointRadius:5,borderWidth:2,tension:.3,yAxisID:'y2',stack:undefined}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{labels:{boxWidth:14,padding:14}},
+      tooltip:{callbacks:{label:c=>c.dataset.label==='# Claims'?'Claims: '+c.parsed.y:c.dataset.label+': '+fmt(c.parsed.y)}}},
+    scales:{
+      x:{stacked:true,grid:{color:gridColor}},
+      y:{stacked:true,grid:{color:gridColor},ticks:{callback:v=>'$'+(v>=1000?Math.round(v/1000)+'K':v)}},
+      y2:{position:'right',grid:{display:false},min:0,max:20,ticks:{stepSize:4}}
+    }
+  }
+});
+
+// COMPOSITION CHART
+new Chart($('compChart'),{
+  type:'doughnut',
+  data:{labels:['Paid','Open Reserves'],datasets:[{data:[357027,688263],backgroundColor:['#C0DD97cc','#F5C4B3cc'],borderColor:['#639922','#D85A30'],borderWidth:2,hoverOffset:6}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+    plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:12}},
+      tooltip:{callbacks:{label:c=>c.label+': '+fmtF(c.parsed)+' ('+Math.round(c.parsed/1045290*100)+'%)'}}}}
+});
+
+// ─── LOCATION TAB ────────────────────────────────────────────────────────────
+const LOCS=[
+  {name:'Laguna Beach',    n:13,total:338145,open:165207},
+  {name:'Burbank',         n:4, total:170241,open:114893},
+  {name:'Porter Ranch',    n:4, total:147119,open:65860},
+  {name:'Westlake Village',n:4, total:77943, open:44783},
+  {name:'Redlands',        n:3, total:63808, open:0},
+  {name:'Ventura',         n:2, total:66959, open:66479},
+  {name:'Goleta',          n:1, total:57729, open:53378},
+  {name:'Camarillo',       n:1, total:46485, open:46292},
+  {name:'Other',           n:6, total:76861, open:31371},
+];
+const KNOWN_LOCS=LOCS.slice(0,8).map(l=>l.name);
+
+$('locGrid').innerHTML=LOCS.map((l,i)=>`
+  <div class="lc" id="lc${i}" onclick="drillLoc('${l.name}',${i})">
+    <h4>${l.name}</h4>
+    <div class="lc-n">${l.n} <span style="font-size:13px;font-weight:400;color:var(--gray-md)">claims</span></div>
+    <div class="lc-$">${fmt(l.total)} incurred</div>
+    <div class="lc-s">${fmt(l.open)} open reserves</div>
+    <div class="lc-bar"><div style="width:${(l.n/13*100).toFixed(0)}%"></div></div>
+  </div>`).join('');
+
+let drillCC=null;
+function drillLoc(name,idx){
+  document.querySelectorAll('.lc').forEach(c=>c.classList.remove('on'));
+  $('lc'+idx).classList.add('on');
+  const claims=name==='Other'?CLAIMS.filter(c=>!KNOWN_LOCS.includes(c.loc)):CLAIMS.filter(c=>c.loc===name);
+  const ti=claims.reduce((a,c)=>a+c.total,0);
+  const to=claims.reduce((a,c)=>a+c.openTotal,0);
+  const tp=claims.reduce((a,c)=>a+c.paidTotal,0);
+  const oc=claims.filter(c=>c.st==='Open').length;
+  $('drillTitle').textContent=name==='Other'?'Other Locations':name;
+  $('drillSub').textContent=`${claims.length} claim${claims.length!==1?'s':''} · ${fmtF(ti)} total incurred`;
+  $('drillStats').innerHTML=`
+    <div class="ds coral"><div class="ds-v">${oc}</div><div class="ds-l">Open claims</div></div>
+    <div class="ds amber"><div class="ds-v">${fmt(to)}</div><div class="ds-l">Open reserves</div></div>
+    <div class="ds sage"><div class="ds-v">${fmt(tp)}</div><div class="ds-l">Total paid</div></div>
+    <div class="ds gray"><div class="ds-v">${fmt(ti)}</div><div class="ds-l">Total incurred</div></div>`;
+  // cause breakdown donut
+  const cmap={};claims.forEach(c=>{cmap[c.cause]=(cmap[c.cause]||0)+1;});
+  const cLabels=Object.keys(cmap),cVals=cLabels.map(k=>cmap[k]),cCols=cLabels.map(k=>CC[k]||'#888780');
+  if(drillCC)drillCC.destroy();
+  drillCC=new Chart($('drillCause'),{
+    type:'doughnut',data:{labels:cLabels,datasets:[{data:cVals,backgroundColor:cCols.map(c=>c+'cc'),borderColor:cCols,borderWidth:2,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'right',labels:{boxWidth:10,padding:8,font:{size:10}}},tooltip:{callbacks:{label:c=>c.label+': '+c.parsed}}}}
+  });
+  $('drillTable').innerHTML=buildTable([...claims].sort((a,b)=>b.total-a.total));
+  $('drill').classList.add('on');
+  $('drill').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function closeDrill(){$('drill').classList.remove('on');document.querySelectorAll('.lc').forEach(c=>c.classList.remove('on'));}
+
+// ─── CAUSE TAB ───────────────────────────────────────────────────────────────
+const CAUSES=[
+  {name:'Cumulative Trauma',key:'CT',          n:26,total:752980},
+  {name:'Slip & Fall',       key:'Slip & Fall', n:5, total:109530},
+  {name:'Laceration',        key:'Laceration',  n:2, total:28651},
+  {name:'Struck By',         key:'Struck By',   n:2, total:30986},
+  {name:'Psych/Stress',      key:'Psych/Stress',n:1, total:21476},
+  {name:'Puncture/Dog',      key:'Puncture/Dog',n:1, total:56503},
+  {name:'Strain',            key:'Strain',      n:1, total:18812},
+];
+
+new Chart($('causePie'),{
+  type:'doughnut',
+  data:{labels:CAUSES.map(c=>c.name),datasets:[{data:CAUSES.map(c=>c.n),backgroundColor:CAUSES.map(c=>(CC[c.key]||'#888')+'cc'),borderColor:CAUSES.map(c=>CC[c.key]||'#888'),borderWidth:2,hoverOffset:8}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+c.parsed+' claims ('+Math.round(c.parsed/38*100)+'%)'}}}}
+});
+
+$('causeLegend').innerHTML=CAUSES.map(c=>`
+  <div class="cl-item">
+    <div class="cl-dot" style="background:${CC[c.key]}"></div>
+    <span class="cl-name">${c.name}</span>
+    <span class="cl-n">${c.n}</span>
+    <div class="cl-bw"><div class="cl-b" style="width:${(c.n/26*100).toFixed(0)}%;background:${CC[c.key]}"></div></div>
+    <span class="cl-pct">${Math.round(c.n/38*100)}%</span>
+    <span class="cl-$">${fmt(c.total)}</span>
+  </div>`).join('');
+
+// Cause filter chips
+const CAUSE_FILTERS=['All',...CAUSES.map(c=>c.key)];
+$('causeChips').innerHTML=CAUSE_FILTERS.map((f,i)=>`<button class="chip${i===0?' on':''}" onclick="filterCause('${f}',this)">${f==='All'?'All causes':f==='CT'?'Cumulative Trauma':f}</button>`).join('');
+let activeCause='All';
+function filterCause(f,btn){
+  activeCause=f;
+  document.querySelectorAll('.chip').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  renderCauseTable();
+}
+function renderCauseTable(){
+  const filtered=activeCause==='All'?CLAIMS:CLAIMS.filter(c=>c.cause===activeCause);
+  $('causeTbl').innerHTML=buildTable([...filtered].sort((a,b)=>b.total-a.total));
+}
+renderCauseTable();
+
+// ─── OPEN CLAIMS TAB ─────────────────────────────────────────────────────────
+new Chart($('ocCountChart'),{
+  type:'doughnut',data:{labels:['Open (22)','Closed (16)'],datasets:[{data:[22,16],backgroundColor:['#F5C4B3cc','#C0DD97cc'],borderColor:['#D85A30','#639922'],borderWidth:2,hoverOffset:6}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:10}},tooltip:{callbacks:{label:c=>c.label+' — '+Math.round(c.parsed/38*100)+'% of all claims'}}}}
+});
+new Chart($('ocAmtChart'),{
+  type:'doughnut',data:{labels:['Open Reserves ($688K)','Paid ($357K)'],datasets:[{data:[688263,357027],backgroundColor:['#F5C4B3cc','#C0DD97cc'],borderColor:['#D85A30','#639922'],borderWidth:2,hoverOffset:6}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:10}},tooltip:{callbacks:{label:c=>c.label+' ('+Math.round(c.parsed/1045290*100)+'%)' }}}}
+});
+
+const openClaims=CLAIMS.filter(c=>c.st==='Open').sort((a,b)=>b.openTotal-a.openTotal);
+$('openTbl').innerHTML=buildTable(openClaims,true);
+
+// ─── TABLE BUILDER ───────────────────────────────────────────────────────────
+function buildTable(claims,showOpen=false){
+  if(!claims.length)return'<div style="padding:20px;text-align:center;color:var(--gray-md)">No claims match this filter.</div>';
+  const rows=claims.map(c=>{
+    const col=CC[c.cause]||'#888';
+    const ac=c.total>50000?'a-hi':c.total>25000?'a-mid':'a-lo';
+    return `<tr>
+      <td class="td-bold">${c.rep?'<span class="rdot" title="Repeat claimant"></span>':''}${c.claimant}</td>
+      <td>${c.yr}–${(parseInt(c.yr)+1).toString().slice(2)}</td>
+      <td>${c.loc}</td>
+      <td><span class="badge" style="background:${col}18;color:${col};border:1px solid ${col}40">${c.cause}</span></td>
+      <td>${fmtF(c.paidTotal)}</td>
+      <td style="color:${c.openTotal>0?'var(--coral-dk)':'var(--gray-md)'};font-weight:${c.openTotal>0?600:400}">${c.openTotal>0?fmtF(c.openTotal):'—'}</td>
+      <td class="${ac}">${fmtF(c.total)}</td>
+      <td><span class="badge ${c.st==='Open'?'b-open':'b-closed'}">${c.st}</span></td>
+      <td style="font-size:11px;color:var(--gray-md);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${c.desc}">${c.desc}</td>
+    </tr>`;
+  }).join('');
+  return`<table>
+    <thead><tr><th>Claimant</th><th>Policy Yr</th><th>Location</th><th>Cause</th><th>Paid</th><th>Open Reserve</th><th>Total Incurred</th><th>Status</th><th>Description</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+// ─── RECOMMENDATIONS ─────────────────────────────────────────────────────────
+const RECOS=[
+  {p:'high',icon:'📍',title:'Intervene at Laguna Beach — highest claim concentration',
+   body:'13 claims and ~$338K incurred make Laguna Beach the single largest driver of WC exposure. Multiple repeat claimants — Torres Cruz (3 claims), Molohua (3 claims), Renteria, Mateo Sixto — have all filed from this location. The pattern suggests a systemic issue with working conditions or claims culture at this site.',
+   acts:['Commission an on-site ergonomic and safety audit immediately','Implement documented daily hazard checks and safety briefings','Review management practices, scheduling, and staffing levels at this location','Evaluate job rotation schedules to reduce cumulative strain exposure'],
+   impact:'Resolving the Laguna Beach cluster could settle $165K+ in open reserves and prevents recurrence at the highest-risk location in the portfolio.'},
+  {p:'high',icon:'🔄',title:'Launch a cumulative trauma prevention program',
+   body:'26 of 38 claims (68%) are Cumulative Trauma injuries. Under California WC law, CT claims are among the hardest to deny and almost always result in litigation. This pattern — concentrated in kitchen and service roles — points directly to repetitive motion risk that is not being managed.',
+   acts:['Engage a certified ergonomics consultant for kitchen, bar, and floor station assessments','Institute structured rest breaks and task rotation for high-repetition roles','Train managers to identify early musculoskeletal warning signs and respond promptly','Document all ergonomic improvements to strengthen future claim defenses'],
+   impact:'CT claims account for ~$753K of total incurred. Reducing CT frequency by 50% over two rating periods would materially improve the E-Mod trajectory from 110% toward the loss-free rate of 31%.'},
+  {p:'high',icon:'👥',title:'Actively manage repeat claimants',
+   body:'Eight individuals each have two or more claims filed. Torres Cruz holds 3 claims from a single policy year; Molohua has 3 claims spanning two years. Together, repeat claimants are responsible for an estimated 40%+ of total open reserves and a disproportionate share of litigation costs.',
+   acts:['Flag all repeat claimants for priority handling by claims counsel and adjusters','Audit employment records, duty assignments, and medical history for each individual','Partner with defense counsel to identify patterns indicative of inflated or coordinated claims','Implement confidential exit interviews for employees who separate after filing claims'],
+   impact:'Repeat claimants account for an estimated $350K+ in combined incurred losses. Early strategic intervention on new claims from known individuals can significantly reduce reserve exposure.'},
+  {p:'med',icon:'⚖️',title:'Accelerate settlement on high-reserve open claims',
+   body:'22 claims remain open with $688K in reserves. Several denied or litigated claims carry high reserves relative to paid amounts — Blaylock ($61K open), Renteria 2025 ($46K open), Ramos ($43K open), Hernandez ($26K open). Early resolution authority on favorable claims can reduce future loss development.',
+   acts:['Request a full file review meeting with SCIF adjusters for all 22 open claims','Identify top 5 claims by reserve and set quarterly resolution targets','Grant defense counsel early settlement authority on denied claims with strong reserve positions','Establish a claims steering committee meeting quarterly to track reserve reductions'],
+   impact:'Settling even 50% of open reserves below current reserve levels would generate meaningful improvement in the 2027 and 2028 E-Mod calculations.'},
+  {p:'med',icon:'🏥',title:'Implement a return-to-work program across all locations',
+   body:'High open reserves in multiple claims reflect extended lost-time and ongoing medical treatment. A formal modified-duty / return-to-work program reduces claim duration, indemnity exposure, and reserve longevity — and signals to SCIF that active claims management is in place.',
+   acts:['Identify light-duty roles at each location (host, cashier, expediter, admin support)','Create a standard modified-duty letter for use by all managers upon receipt of a claim','Train managers on communicating RTW expectations consistently and with empathy','Track RTW utilization rate as a monthly metric across all locations'],
+   impact:'Industry data shows RTW programs reduce average WC claim costs by 20–30%. Applied to $688K in open reserves, this translates to $137K–$206K in potential savings.'},
+  {p:'low',icon:'🛡️',title:'Strengthen kitchen and floor safety protocols',
+   body:'Slip & Fall accounts for 5 claims including the largest current open claim (Neri, $57.7K). Lacerations add 2 more. Both are largely preventable with consistent equipment standards and safety culture at the kitchen level.',
+   acts:['Audit non-slip flooring, mats, and drainage in all kitchen and service areas','Mandate non-slip footwear as a condition of employment for kitchen and floor staff','Add knife-handling and equipment safety to new-hire onboarding and annual refresher training','Log all near-miss slip/fall incidents and review in monthly location safety meetings'],
+   impact:'Slip & Fall and Laceration claims represent ~$138K in incurred losses. Equipment and training investments in these categories have a clear and measurable return.'},
+];
+
+$('recoGrid').innerHTML=RECOS.map(r=>`
+  <div class="rc ${r.p}">
+    <div class="rc-hdr">
+      <div class="rc-icon">${r.icon}</div>
+      <div>
+        <div class="rc-pri">${r.p==='high'?'⬤ High Priority':r.p==='med'?'⬤ Medium Priority':'⬤ Lower Priority'}</div>
+        <h4>${r.title}</h4>
+      </div>
+    </div>
+    <p class="rc-body">${r.body}</p>
+    <ul class="rc-acts">${r.acts.map(a=>`<li>${a}</li>`).join('')}</ul>
+    <div class="rc-impact"><strong>Expected impact:</strong> ${r.impact}</div>
+  </div>`).join('');
+</script>
+</body>
+</html>
