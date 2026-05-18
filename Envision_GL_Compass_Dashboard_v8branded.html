@@ -1110,7 +1110,8 @@ const PRODUCT_INFO = {
       ['8.5 / 10', 'Score contribution'],
       ['Sync delayed', 'Last sync 6h ago']
     ],
-    cta: 'Open RRMInspector →'
+    cta: 'Open RRMInspector →',
+    url: './rmm_inspector.html'
   },
   defense: {
     name: 'RRM<b>Defense</b>',
@@ -1141,7 +1142,7 @@ function showProductInfo(key){
           <div style="font-size:10.5px;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;font-weight:600;margin-top:2px">${l}</div>
         </div>`).join('')}
     </div>
-    <button style="width:100%;background:#0a2540;color:#fff;border:0;padding:10px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer">${p.cta}</button>
+    <button onclick="${p.url?`window.location.href='${p.url}'`:''}" style="width:100%;background:#0a2540;color:#fff;border:0;padding:10px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer">${p.cta}</button>
   `;
   document.getElementById('drawer').classList.add('open');
   document.getElementById('drawerBack').classList.add('open');
