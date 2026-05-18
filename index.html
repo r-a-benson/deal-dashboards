@@ -58,7 +58,90 @@ body{
   padding:52px 24px;
 }
 .container{
-  width:min(100%, 860px);
+  width:min(100%, 960px);
+}
+
+/* ACTION ITEMS */
+.action-section{
+  margin-top:36px;
+  opacity:0;
+  animation:fadeUp 0.38s ease 0.32s forwards;
+}
+.action-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;
+}
+.action-header h2{
+  font-size:18px;font-weight:700;color:#111827;letter-spacing:-0.2px;
+  display:flex;align-items:center;gap:10px;
+}
+.action-header h2 .count{
+  background:#0A1B4A;color:#fff;font-size:11px;font-weight:700;
+  border-radius:99px;padding:2px 8px;
+}
+.action-panel{
+  background:#fff;border-radius:12px;border:1px solid #e5e7eb;
+  box-shadow:0 1px 4px rgba(0,0,0,0.04);overflow:hidden;
+}
+.add-form{
+  display:flex;gap:10px;padding:16px 20px;border-bottom:1px solid #e5e7eb;
+  flex-wrap:wrap;
+}
+.add-form input{
+  flex:1;min-width:200px;padding:9px 13px;border:1px solid #d1d5db;
+  border-radius:8px;font-size:14px;font-family:inherit;color:#111827;
+}
+.add-form input:focus{outline:none;border-color:#0A1B4A;box-shadow:0 0 0 3px rgba(10,27,74,0.08)}
+.add-form select{
+  padding:9px 13px;border:1px solid #d1d5db;border-radius:8px;
+  font-size:13px;font-family:inherit;color:#374151;background:#fff;cursor:pointer;
+}
+.add-form select:focus{outline:none;border-color:#0A1B4A;}
+.add-form button{
+  padding:9px 18px;background:#0A1B4A;color:#fff;border:none;
+  border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
+  white-space:nowrap;font-family:inherit;
+}
+.add-form button:hover{background:#0d2260;}
+.item-row{
+  display:flex;align-items:flex-start;gap:12px;padding:14px 20px;
+  border-bottom:1px solid #f3f4f6;transition:background 0.1s;
+}
+.item-row:last-child{border-bottom:0;}
+.item-row:hover{background:#f9fafb;}
+.item-row.done .item-desc{text-decoration:line-through;color:#9ca3af;}
+.item-cb{
+  width:18px;height:18px;border-radius:4px;border:2px solid #d1d5db;
+  cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;
+  justify-content:center;transition:all 0.15s;background:#fff;
+}
+.item-cb.checked{background:#0A1B4A;border-color:#0A1B4A;}
+.item-cb.checked svg{display:block;}
+.item-cb svg{display:none;width:11px;height:11px;}
+.item-desc{
+  flex:1;font-size:14px;color:#111827;line-height:1.5;cursor:text;
+  min-width:0;word-break:break-word;
+}
+.item-desc[contenteditable="true"]{
+  outline:none;background:#eff6ff;border-radius:4px;padding:2px 6px;
+}
+.assignee-pill{
+  font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;
+  white-space:nowrap;flex-shrink:0;cursor:pointer;letter-spacing:0.2px;
+}
+.assignee-pill.cliff{background:#fef3c7;color:#92400e;}
+.assignee-pill.robert{background:#dbeafe;color:#1e40af;}
+.item-del{
+  width:26px;height:26px;border-radius:6px;border:none;background:transparent;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:#d1d5db;transition:all 0.15s;flex-shrink:0;
+}
+.item-del:hover{background:#fee2e2;color:#dc2626;}
+.items-empty{
+  padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;
+}
+.items-loading{
+  padding:24px 20px;text-align:center;color:#9ca3af;font-size:13px;
 }
 
 /* HEADING */
@@ -296,8 +379,159 @@ body{
       </a>
 
     </div>
+
+    <!-- ACTION ITEMS -->
+    <div class="action-section">
+      <div class="action-header">
+        <h2>
+          Cliff / Robert Action Items
+          <span class="count" id="item-count">0</span>
+        </h2>
+      </div>
+      <div class="action-panel">
+        <div class="add-form">
+          <input type="text" id="new-desc" placeholder="Add an action item…" onkeydown="if(event.key==='Enter')addItem()">
+          <select id="new-assignee">
+            <option value="Robert">Robert</option>
+            <option value="Cliff">Cliff</option>
+          </select>
+          <button onclick="addItem()">+ Add</button>
+        </div>
+        <div id="items-list">
+          <div class="items-loading">Loading…</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </main>
+
+<script>
+const API = 'https://deal-dashboards-api.robertabenson.workers.dev/api/items';
+let items = [];
+
+async function loadItems() {
+  try {
+    const r = await fetch(API);
+    items = await r.json();
+    renderItems();
+  } catch(e) {
+    document.getElementById('items-list').innerHTML =
+      '<div class="items-empty">Could not load items — check Worker is deployed.</div>';
+  }
+}
+
+function renderItems() {
+  const el = document.getElementById('items-list');
+  document.getElementById('item-count').textContent = items.filter(i=>!i.done).length;
+  if (!items.length) {
+    el.innerHTML = '<div class="items-empty">No action items yet — add one above.</div>';
+    return;
+  }
+  el.innerHTML = items.map(item => `
+    <div class="item-row ${item.done?'done':''}" id="row-${item.id}">
+      <div class="item-cb ${item.done?'checked':''}" onclick="toggleDone('${item.id}')">
+        <svg viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="2 6 5 9 10 3"/>
+        </svg>
+      </div>
+      <div class="item-desc"
+           contenteditable="false"
+           onclick="startEdit(this)"
+           onblur="saveEdit('${item.id}', this)"
+           onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+      >${escHtml(item.description)}</div>
+      <span class="assignee-pill ${item.assignee.toLowerCase()}"
+            onclick="toggleAssignee('${item.id}')">
+        ${item.assignee}
+      </span>
+      <button class="item-del" onclick="deleteItem('${item.id}')" title="Delete">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14H6L5 6"/>
+          <path d="M10 11v6M14 11v6"/>
+        </svg>
+      </button>
+    </div>`).join('');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function startEdit(el) {
+  el.contentEditable = 'true';
+  el.focus();
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(range);
+}
+
+async function saveEdit(id, el) {
+  el.contentEditable = 'false';
+  const desc = el.textContent.trim();
+  if (!desc) { renderItems(); return; }
+  const item = items.find(i => i.id === id);
+  if (!item || item.description === desc) return;
+  item.description = desc;
+  await fetch(`${API}/${id}`, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ description: desc })
+  });
+  renderItems();
+}
+
+async function toggleDone(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  item.done = !item.done;
+  renderItems();
+  await fetch(`${API}/${id}`, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ done: item.done })
+  });
+}
+
+async function toggleAssignee(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  item.assignee = item.assignee === 'Robert' ? 'Cliff' : 'Robert';
+  renderItems();
+  await fetch(`${API}/${id}`, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ assignee: item.assignee })
+  });
+}
+
+async function addItem() {
+  const descEl = document.getElementById('new-desc');
+  const desc = descEl.value.trim();
+  if (!desc) return;
+  const assignee = document.getElementById('new-assignee').value;
+  descEl.value = '';
+  const r = await fetch(API, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ description: desc, assignee })
+  });
+  const newItem = await r.json();
+  items.push(newItem);
+  renderItems();
+}
+
+async function deleteItem(id) {
+  items = items.filter(i => i.id !== id);
+  renderItems();
+  await fetch(`${API}/${id}`, { method: 'DELETE' });
+}
+
+loadItems();
+</script>
 
 <footer class="footer">
   <div class="footer-left">
