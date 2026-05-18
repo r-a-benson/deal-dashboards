@@ -1259,10 +1259,10 @@ function resolveAlert(id){const a=ALERTS.find(x=>x.id===id);if(a){a.resolved=tru
 
 // S17: Tasks / Corrective Actions
 const TASKS = [
-  {id:1,title:'Loose Floor Tile',location:'Kitchen Prep Area',ref:'08-TASK',severity:'critical',status:'in-progress',assignee:'Mike R.',assigneeInitials:'MR',assigneeColor:'#16a34a',due:'Today',dueTime:'5:00 PM',overdue:false,photo:'floor'},
-  {id:2,title:'Expiring Fire Extinguisher Tags',location:'Main Kitchen',ref:'08-TASK',severity:'critical',status:'in-progress',assignee:'Mike R.',assigneeInitials:'MR',assigneeColor:'#16a34a',due:'Today',dueTime:'5:00 PM',overdue:false,photo:'extinguisher'},
-  {id:3,title:'Ansul System Certification Expired',location:'Kitchen Hoods',ref:'10-CERT',severity:'high',status:'pending',assignee:'Sarah L.',assigneeInitials:'SL',assigneeColor:'#2563eb',due:'Oct 28',dueTime:null,overdue:false,photo:'ansul'},
-  {id:4,title:'Walk-in Cooler Temp',location:'Storage Unit B',ref:'02-COLD',severity:'overdue',status:'open',assignee:'John D.',assigneeInitials:'JD',assigneeColor:'#9333ea',due:'2 Days Ago',dueTime:null,overdue:true,photo:'gauge'},
+  {id:1,title:'Loose Floor Tile',location:'Kitchen Prep Area',ref:'08-TASK',severity:'critical',status:'in-progress',assignee:'Mike R.',assigneeInitials:'MR',assigneeColor:'#16a34a',due:'Today',dueTime:'5:00 PM',overdue:false,photo:'task-floor-tile.png'},
+  {id:2,title:'Expiring Fire Extinguisher Tags',location:'Main Kitchen',ref:'08-TASK',severity:'critical',status:'in-progress',assignee:'Mike R.',assigneeInitials:'MR',assigneeColor:'#16a34a',due:'Today',dueTime:'5:00 PM',overdue:false,photo:'task-extinguisher.png'},
+  {id:3,title:'Ansul System Certification Expired',location:'Kitchen Hoods',ref:'10-CERT',severity:'high',status:'pending',assignee:'Sarah L.',assigneeInitials:'SL',assigneeColor:'#2563eb',due:'Oct 28',dueTime:null,overdue:false,photo:'task-ansul.png'},
+  {id:4,title:'Walk-in Cooler Temp',location:'Storage Unit B',ref:'02-COLD',severity:'overdue',status:'open',assignee:'John D.',assigneeInitials:'JD',assigneeColor:'#9333ea',due:'2 Days Ago',dueTime:null,overdue:true,photo:'task-gauge.png'},
   {id:5,title:'Grease Trap Cleaning Overdue',location:'Main Kitchen',ref:'11-MAINT',severity:'high',status:'pending',assignee:'Sarah L.',assigneeInitials:'SL',assigneeColor:'#2563eb',due:'Nov 2',dueTime:null,overdue:false,photo:''},
   {id:6,title:'Hood Suppression System Test',location:'Kitchen Hoods',ref:'12-FIRE',severity:'critical',status:'open',assignee:'Mike R.',assigneeInitials:'MR',assigneeColor:'#16a34a',due:'Tomorrow',dueTime:'9:00 AM',overdue:false,photo:''},
 ];
@@ -1314,9 +1314,8 @@ function renderTaskCard(t) {
 
   const statusChip = `<span style="background:#f3f4f6;color:#374151;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;display:inline-flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${t.status==='in-progress'?'In Progress':t.status==='open'?'Open':'Pending'}</span>`;
 
-  const photo = PHOTO_SVGS[t.photo];
-  const photoEl = photo
-    ? `<div style="height:140px;overflow:hidden;border-radius:10px 10px 0 0;background:#f3f4f6;display:flex;align-items:center;justify-content:center">${photo.replace('viewBox="0 0 80 48"','viewBox="0 0 80 48" style="width:100%;height:140px;object-fit:cover"')}</div>`
+  const photoEl = t.photo
+    ? `<div style="height:160px;overflow:hidden;border-radius:10px 10px 0 0"><img src="./${t.photo}" alt="${t.title}" style="width:100%;height:160px;object-fit:cover;display:block"></div>`
     : `<div style="height:100px;background:linear-gradient(135deg,#e5e7eb,#f3f4f6);border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>`;
 
   return `<div style="background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden;${t.overdue?'border-left:4px solid #dc2626;':'border:1px solid #e5e7eb;'}">
