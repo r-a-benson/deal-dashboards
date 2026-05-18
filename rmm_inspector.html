@@ -922,6 +922,180 @@ RENDERERS['reports'] = function() {
   </div>`;
 };
 
+// S5: New Inspection
+RENDERERS['new-inspection'] = function() {
+  document.getElementById('new-inspection-content').innerHTML = `
+  <div style="max-width:580px;display:flex;flex-direction:column;gap:16px">
+    <div class="card">
+      <div class="section-title">Location</div>
+      <div class="field" style="margin:0">
+        <select><option value="">Select a location…</option>${LOCATIONS.map(l=>`<option>${l.name}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Inspection Type</div>
+      <div class="radio-group">
+        ${[['routine','Routine Audit','Standard full inspection — all categories'],['followup','Follow-Up','Verify remediation of previous violations'],['special','Special / Incident','Triggered by complaint or incident report']].map(([v,n,d],i)=>`
+        <label class="radio-opt ${i===0?'sel':''}" onclick="document.querySelectorAll('.radio-opt').forEach(x=>x.classList.remove('sel'));this.classList.add('sel')">
+          <input type="radio" name="itype" value="${v}" ${i===0?'checked':''}>
+          <div class="ro-body"><div class="ro-title">${n}</div><div class="ro-sub">${d}</div></div>
+        </label>`).join('')}
+      </div>
+    </div>
+    <div class="grid-2" style="margin:0;gap:12px">
+      <div class="card">
+        <div class="section-title">Inspector</div>
+        <div class="field" style="margin:0">
+          <select><option>Mike Rodriguez (You)</option><option>Sarah Chen</option><option>James Park</option><option>Lisa Torres</option></select>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">Scheduled Date</div>
+        <div class="field" style="margin:0"><input type="date" value="2026-05-18"></div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="nav('active-inspection')" style="width:100%;justify-content:center;padding:12px;font-size:14px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Start Inspection
+    </button>
+  </div>`;
+};
+
+// S6: Active Inspection
+RENDERERS['active-inspection'] = function() {
+  const done=SECTIONS.filter(s=>s.status==='complete').length;
+  const pct=Math.round(done/SECTIONS.length*100);
+  const r=52,circ=2*Math.PI*r;
+  const dash=circ*(pct/100);
+  document.getElementById('active-inspection-content').innerHTML = `
+  <div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+    <div class="card" style="display:flex;align-items:center;gap:20px;flex:1;min-width:260px">
+      <div class="ring-wrap" style="width:120px;height:120px">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="${r}" fill="none" stroke="#e5e7eb" stroke-width="10"/>
+          <circle cx="60" cy="60" r="${r}" fill="none" stroke="#16a34a" stroke-width="10"
+                  stroke-dasharray="${dash} ${circ}" stroke-linecap="round"/>
+        </svg>
+        <div class="ring-num"><div class="rv" style="color:#16a34a">${pct}%</div><div class="rl">Complete</div></div>
+      </div>
+      <div>
+        <div style="font-size:20px;font-weight:700;color:#111827">Grand Central Kitchen</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:3px">Routine Audit · Started 9:14 AM</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px">Duration: 42 min · ${done} of ${SECTIONS.length} sections</div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <span class="badge badge-green">${done} Complete</span>
+          <span class="badge badge-amber">${SECTIONS.filter(s=>s.status==='in-progress').length} In Progress</span>
+          <span class="badge badge-gray">${SECTIONS.filter(s=>s.status==='pending').length} Pending</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="section-title">Inspection Sections</div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    ${SECTIONS.map(s=>{
+      const ic=s.status==='complete'?'✓':s.status==='in-progress'?'…':'○';
+      const col=s.status==='complete'?'#16a34a':s.status==='in-progress'?'#0a2540':'#9ca3af';
+      const badge=s.score!==null?`<span class="badge badge-green">${s.score}%</span>`:s.status==='in-progress'?`<span class="badge badge-amber">${s.done}/${s.items}</span>`:`<span class="badge badge-gray">${s.items} items</span>`;
+      return`<div class="card" style="padding:14px 18px;cursor:pointer;display:flex;align-items:center;gap:14px" onclick="nav('inspection-section')">
+        <div style="width:28px;height:28px;border-radius:50%;border:2px solid ${col};display:flex;align-items:center;justify-content:center;color:${col};font-size:13px;font-weight:700;flex-shrink:0">${ic}</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:600;color:#111827">${s.name}</div><div style="font-size:11px;color:#6b7280">${s.items} items</div></div>
+        ${badge}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>`;
+    }).join('')}
+  </div>`;
+};
+
+// S7: Inspection Section
+RENDERERS['inspection-section'] = function() {
+  document.getElementById('section-content').innerHTML = `
+  <div style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-size:13px;font-weight:600;color:#374151">Section Progress</div>
+      <div style="font-size:13px;font-weight:700;color:#0a2540">4 / 7 items</div>
+    </div>
+    <div class="prog-bar" style="height:8px"><div style="width:57%;background:#16a34a"></div></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    ${ITEMS.map(item=>{
+      const passOn=item.status==='pass',failOn=item.status==='fail';
+      return`<div class="card" style="padding:14px 18px;cursor:pointer" onclick="nav('item-detail')">
+        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:#111827;line-height:1.4">${item.label}</div>
+            ${item.critical?'<span class="badge badge-red" style="margin-top:4px">CRITICAL</span>':''}
+          </div>
+        </div>
+        <div class="pf-grid" onclick="event.stopPropagation()">
+          <div class="pf-btn ${passOn?'pass-sel':'pass-idle'}" onclick="togglePF(this,'pass')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>PASS</span>
+          </div>
+          <div class="pf-btn ${failOn?'fail-sel':'fail-idle'}" onclick="togglePF(this,'fail')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <span>FAIL</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+};
+
+// S8: Item Detail
+RENDERERS['item-detail'] = function() {
+  document.getElementById('item-detail-content').innerHTML = `
+  <div style="max-width:600px;display:flex;flex-direction:column;gap:16px">
+    <div class="card">
+      <span class="badge badge-red" style="margin-bottom:10px;display:inline-block">CRITICAL</span>
+      <div style="font-size:17px;font-weight:700;color:#111827;margin-bottom:8px">Proper Cold Storage Temperatures</div>
+      <div style="font-size:13px;color:#374151;line-height:1.6">All refrigerated food must be stored at 41°F (5°C) or below. Frozen items at 0°F (-18°C) or below. Check thermometer calibration and placement.</div>
+    </div>
+    <div class="card">
+      <div class="section-title">Compliance Status</div>
+      <div class="pf-grid">
+        <div class="pf-btn pass-sel" id="pf-pass" onclick="setItemPF('pass')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>PASS</span>
+        </div>
+        <div class="pf-btn fail-idle" id="pf-fail" onclick="setItemPF('fail')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span>FAIL</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Inspector Notes</div>
+      <textarea placeholder="Add notes about this item…" rows="3" style="width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;font-family:inherit;resize:vertical"></textarea>
+    </div>
+    <div class="card">
+      <div class="section-title">Evidence</div>
+      <div class="grid-2" style="margin:0;gap:10px">
+        <button class="btn-outline" style="justify-content:center;padding:14px" onclick="nav('photo-capture')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Add Photo
+        </button>
+        <button class="btn-outline" style="justify-content:center;padding:14px" onclick="nav('voice-notes')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          Voice Note
+        </button>
+      </div>
+    </div>
+  </div>`;
+};
+
+function togglePF(el,val){
+  const row=el.closest('.pf-grid');
+  row.querySelectorAll('.pf-btn').forEach(b=>{
+    b.className='pf-btn '+(b===el?(val==='pass'?'pass-sel':'fail-sel'):(val==='pass'?'fail-idle':'pass-idle'));
+  });
+}
+function setItemPF(val){
+  const p=document.getElementById('pf-pass'),f=document.getElementById('pf-fail');
+  if(!p||!f) return;
+  p.className='pf-btn '+(val==='pass'?'pass-sel':'pass-idle');
+  f.className='pf-btn '+(val==='fail'?'fail-sel':'fail-idle');
+}
+
 // S4: Settings
 RENDERERS['settings'] = function() {
   document.getElementById('settings-content').innerHTML = `
