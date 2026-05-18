@@ -1251,7 +1251,7 @@ RENDERERS['location-detail'] = function(ctx) {
       </div>
       <div style="display:flex;gap:8px;margin-top:12px">
         <button class="btn-primary" onclick="nav('new-inspection')" style="flex:1;justify-content:center">Start Inspection</button>
-        <button class="btn-outline" onclick="nav('location-tasks',{location:loc.name})" style="flex:1;justify-content:center">View Tasks</button>
+        <button class="btn-outline" onclick="nav('location-tasks',{unit:loc.name})" style="flex:1;justify-content:center">View Tasks</button>
         <button class="btn-outline" onclick="nav('alerts')" style="flex:1;justify-content:center">View Risks</button>
       </div>
     </div>
@@ -1281,12 +1281,12 @@ function resolveAlert(id){const a=ALERTS.find(x=>x.id===id);if(a){a.resolved=tru
 
 // S17: Tasks / Corrective Actions
 const TASKS = [
-  {id:1,title:'Loose Floor Tile',location:'Kitchen Prep Area',ref:'08-TASK',severity:'critical',status:'in-progress',assignee:'Mike R.',assigneeInitials:'MR',assigneeColor:'#16a34a',due:'Today',dueTime:'5:00 PM',overdue:false,photo:'task-floor-tile.png'},
-  {id:2,title:'Expiring Fire Extinguisher Tags',location:'Main Kitchen',ref:'08-TASK',severity:'critical',status:'in-progress',assignee:'Mike R.',assigneeInitials:'MR',assigneeColor:'#16a34a',due:'Today',dueTime:'5:00 PM',overdue:false,photo:'task-extinguisher.png'},
-  {id:3,title:'Ansul System Certification Expired',location:'Kitchen Hoods',ref:'10-CERT',severity:'high',status:'pending',assignee:'Sarah L.',assigneeInitials:'SL',assigneeColor:'#2563eb',due:'Oct 28',dueTime:null,overdue:false,photo:'task-ansul.png'},
-  {id:4,title:'Walk-in Cooler Temp',location:'Storage Unit B',ref:'02-COLD',severity:'overdue',status:'open',assignee:'John D.',assigneeInitials:'JD',assigneeColor:'#9333ea',due:'2 Days Ago',dueTime:null,overdue:true,photo:'task-gauge.png'},
-  {id:5,title:'Grease Trap Cleaning Overdue',location:'Main Kitchen',ref:'11-MAINT',severity:'high',status:'pending',assignee:'Sarah L.',assigneeInitials:'SL',assigneeColor:'#2563eb',due:'Nov 2',dueTime:null,overdue:false,photo:''},
-  {id:6,title:'Hood Suppression System Test',location:'Kitchen Hoods',ref:'12-FIRE',severity:'critical',status:'open',assignee:'Mike R.',assigneeInitials:'MR',assigneeColor:'#16a34a',due:'Tomorrow',dueTime:'9:00 AM',overdue:false,photo:''},
+  {id:1,title:'Loose Floor Tile',unit:'South Station Deli',location:'Kitchen Prep Area',ref:'08-TASK',severity:'critical',status:'in-progress',assignee:'Mike R.',assigneeInitials:'MR',assigneeColor:'#16a34a',due:'Today',dueTime:'5:00 PM',overdue:false,photo:'task-floor-tile.png'},
+  {id:2,title:'Expiring Fire Extinguisher Tags',unit:'South Station Deli',location:'Main Kitchen',ref:'08-TASK',severity:'critical',status:'in-progress',assignee:'Mike R.',assigneeInitials:'MR',assigneeColor:'#16a34a',due:'Today',dueTime:'5:00 PM',overdue:false,photo:'task-extinguisher.png'},
+  {id:3,title:'Ansul System Certification Expired',unit:'Broadway Express',location:'Kitchen Hoods',ref:'10-CERT',severity:'high',status:'pending',assignee:'Sarah L.',assigneeInitials:'SL',assigneeColor:'#2563eb',due:'Oct 28',dueTime:null,overdue:false,photo:'task-ansul.png'},
+  {id:4,title:'Walk-in Cooler Temp',unit:'Broadway Express',location:'Storage Unit B',ref:'02-COLD',severity:'overdue',status:'open',assignee:'John D.',assigneeInitials:'JD',assigneeColor:'#9333ea',due:'2 Days Ago',dueTime:null,overdue:true,photo:'task-gauge.png'},
+  {id:5,title:'Grease Trap Cleaning Overdue',unit:'Grand Central Kitchen',location:'Main Kitchen',ref:'11-MAINT',severity:'high',status:'pending',assignee:'Sarah L.',assigneeInitials:'SL',assigneeColor:'#2563eb',due:'Nov 2',dueTime:null,overdue:false,photo:''},
+  {id:6,title:'Hood Suppression System Test',unit:'South Station Deli',location:'Kitchen Hoods',ref:'12-FIRE',severity:'critical',status:'open',assignee:'Mike R.',assigneeInitials:'MR',assigneeColor:'#16a34a',due:'Tomorrow',dueTime:'9:00 AM',overdue:false,photo:''},
 ];
 
 const PHOTO_SVGS = {
@@ -1347,9 +1347,9 @@ function renderTaskCard(t, hideLocationTag=false) {
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${sevBadge}</div>
         <div style="text-align:right;flex-shrink:0;font-size:12px;font-weight:700;color:${dueColor};line-height:1.4">${dueText}</div>
       </div>
-      ${hideLocationTag ? '' : `<button onclick="event.stopPropagation();nav('location-tasks',{location:'${t.location}'})" style="display:inline-flex;align-items:center;gap:5px;background:#0A1B4A;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px;font-family:inherit">
+      ${hideLocationTag ? '' : `<button onclick="event.stopPropagation();nav('location-tasks',{unit:'${t.unit}'})" style="display:inline-flex;align-items:center;gap:5px;background:#0A1B4A;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px;font-family:inherit">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        ${t.location}
+        ${t.unit}
       </button>`}
       <div style="font-size:17px;font-weight:700;color:#111827;margin-bottom:8px;line-height:1.3">${t.title}</div>
       <div style="display:flex;gap:14px;margin-bottom:6px;flex-wrap:wrap">
@@ -1378,11 +1378,11 @@ function renderTaskCard(t, hideLocationTag=false) {
 }
 
 RENDERERS['location-tasks'] = function(ctx) {
-  const locationName = ctx && ctx.location ? ctx.location : '';
-  const locTasks = TASKS.filter(t => t.location === locationName || t.location.includes(locationName));
-  const loc = LOCATIONS.find(l => l.name === locationName) || {};
+  const unitName = ctx && ctx.unit ? ctx.unit : '';
+  const locTasks = TASKS.filter(t => t.unit === unitName);
+  const loc = LOCATIONS.find(l => l.name === unitName) || {};
 
-  document.getElementById('loc-tasks-title').textContent = locationName || 'Unit Tasks';
+  document.getElementById('loc-tasks-title').textContent = unitName || 'Unit Tasks';
   document.getElementById('loc-tasks-sub').textContent =
     `${locTasks.length} task${locTasks.length!==1?'s':''} · ${locTasks.filter(t=>t.overdue).length} overdue`;
 
