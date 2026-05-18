@@ -1229,6 +1229,148 @@ RENDERERS['alerts'] = function() {
 };
 function resolveAlert(id){const a=ALERTS.find(x=>x.id===id);if(a){a.resolved=true;RENDERERS['alerts']();}}
 
+// S13: Violation Detail
+RENDERERS['violation-detail'] = function(ctx) {
+  const v=VIOLATIONS[ctx&&ctx.id||1]||VIOLATIONS[1];
+  document.getElementById('violation-detail-content').innerHTML = `
+  <div style="max-width:620px;display:flex;flex-direction:column;gap:16px">
+    <div class="card">
+      <span class="badge ${v.sev==='critical'?'badge-red':v.sev==='medium'?'badge-amber':'badge-gray'}" style="margin-bottom:10px;display:inline-block">${v.sev.toUpperCase()}</span>
+      <div style="font-size:18px;font-weight:700;color:#111827;margin-bottom:8px">${v.title}</div>
+      <div style="font-size:13px;color:#374151;line-height:1.6">${v.desc}</div>
+    </div>
+    <div class="card">
+      <div class="section-title">Details</div>
+      ${[['Location',v.loc],['Date Found',v.date],['Inspector',v.inspector],['Status',v.status.toUpperCase()]].map(([k,val])=>`
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px">
+        <span style="color:#6b7280;font-weight:600">${k}</span>
+        <span style="color:${k==='Status'&&v.status==='open'?'#b91c1c':'#111827'};font-weight:${k==='Status'?700:400}">${val}</span>
+      </div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="section-title">Required Remediation</div>
+      <div style="font-size:13px;color:#374151;line-height:1.6">${v.remediation}</div>
+    </div>
+    <div class="card">
+      <div class="section-title">Evidence</div>
+      <button class="btn-outline" onclick="nav('photo-capture')" style="width:100%;justify-content:center;padding:14px;border-style:dashed">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Attach Photo Evidence
+      </button>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn-primary" onclick="nav('inspections')" style="flex:1;justify-content:center">Mark Resolved</button>
+      <button class="btn-outline" onclick="nav('new-inspection')" style="flex:1;justify-content:center">Schedule Follow-Up</button>
+    </div>
+  </div>`;
+};
+
+// S14: Photo Capture
+RENDERERS['photo-capture'] = function() {
+  document.getElementById('photo-content').innerHTML = `
+  <div style="max-width:540px">
+    <div style="background:#1f2937;border-radius:12px;aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;margin-bottom:16px">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <div style="color:#6b7280;font-size:13px">Camera preview</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:20px">
+      <button class="btn-primary" style="flex:1;justify-content:center;padding:12px;font-size:14px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M20.56 16.59A10 10 0 118 3.44"/></svg>
+        Capture Photo
+      </button>
+      <button class="btn-outline" style="flex:1;justify-content:center;padding:12px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload from Library
+      </button>
+    </div>
+    <div class="section-title">Recent Photos (3)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      ${[1,2,3].map(()=>`<div style="aspect-ratio:1;background:#e5e7eb;border-radius:8px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></div>`).join('')}
+    </div>
+  </div>`;
+};
+
+// S15: Voice Notes
+RENDERERS['voice-notes'] = function() {
+  document.getElementById('voice-content').innerHTML = `
+  <div style="max-width:480px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:32px 0;margin-bottom:8px">
+      <button id="rec-btn" onclick="toggleRec()" style="width:96px;height:96px;border-radius:50%;background:#0a2540;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
+      <div id="rec-status" style="font-size:14px;font-weight:600;color:#6b7280">Tap to record</div>
+      <div id="waveform" style="display:flex;align-items:center;gap:2px;height:40px;min-width:160px;justify-content:center"></div>
+    </div>
+    <div class="section-title">Saved Recordings</div>
+    ${[['Note #1','0:14','Today 9:22 AM'],['Note #2 — Temp reading','0:28','Today 9:30 AM']].map(([n,d,t])=>`
+    <div class="card" style="padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <button style="width:36px;height:36px;border-radius:50%;background:#0a2540;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </button>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#111827">${n}</div><div style="font-size:11px;color:#6b7280">${d} · ${t}</div></div>
+      <button style="background:none;border:none;cursor:pointer;color:#ef4444;padding:4px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </button>
+    </div>`).join('')}
+  </div>`;
+};
+let recActive=false,recInt=null;
+function toggleRec(){
+  recActive=!recActive;
+  const btn=document.getElementById('rec-btn');
+  const status=document.getElementById('rec-status');
+  const wave=document.getElementById('waveform');
+  if(!btn) return;
+  if(recActive){
+    btn.style.background='#ef4444';status.style.color='#ef4444';status.textContent='Recording…';
+    recInt=setInterval(()=>{wave.innerHTML=Array.from({length:16},()=>`<div style="width:3px;height:${6+Math.random()*26}px;background:#0a2540;border-radius:2px;transition:height .1s"></div>`).join('');},120);
+  } else {
+    btn.style.background='#0a2540';status.style.color='#16a34a';status.textContent='Recording saved ✓';
+    clearInterval(recInt);wave.innerHTML='';
+    setTimeout(()=>{if(document.getElementById('rec-status'))document.getElementById('rec-status').style.color='#6b7280',document.getElementById('rec-status').textContent='Tap to record';},2000);
+  }
+}
+
+// S16: Profile
+RENDERERS['profile'] = function() {
+  document.getElementById('profile-content').innerHTML = `
+  <div style="max-width:540px;display:flex;flex-direction:column;gap:16px">
+    <div class="card" style="display:flex;align-items:center;gap:16px">
+      <div style="width:64px;height:64px;border-radius:50%;background:#16a34a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;flex-shrink:0">MR</div>
+      <div>
+        <div style="font-size:20px;font-weight:700;color:#111827">Mike Rodriguez</div>
+        <div style="font-size:13px;color:#6b7280">Senior Inspector · West Coast Region</div>
+        <span class="badge badge-green" style="margin-top:6px;display:inline-block">Active</span>
+      </div>
+    </div>
+    <div class="kpi-strip" style="grid-template-columns:repeat(3,1fr);margin:0">
+      <div class="kpi-c blue"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg></div><div class="tx"><div class="lbl">Audits</div><div class="v">14</div></div></div>
+      <div class="kpi-c red"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div><div class="tx"><div class="lbl">Failed</div><div class="v">3</div></div></div>
+      <div class="kpi-c green"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg></div><div class="tx"><div class="lbl">Avg Score</div><div class="v">94%</div></div></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Assigned Locations (5)</div>
+      ${LOCATIONS.map(l=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px">
+        <span style="font-weight:600;color:#111827">${l.name}</span>
+        ${l.criticals>0?`<span class="badge badge-red">${l.criticals} CRITICAL</span>`:'<span class="badge badge-green">CLEAR</span>'}
+      </div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="section-title">Contact</div>
+      ${[['Email','mike.r@rrmco.com'],['Phone','(415) 555-0142'],['License','CA-FSI-48821']].map(([k,v])=>`
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px"><span style="color:#6b7280;font-weight:600">${k}</span><span style="color:#111827">${v}</span></div>`).join('')}
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn-outline" onclick="nav('settings')" style="flex:1;justify-content:center">Settings</button>
+      <button class="btn-danger" style="flex:1;justify-content:center">Sign Out</button>
+    </div>
+  </div>`;
+};
+
+// Init — render dashboard on load
+RENDERERS['dashboard']();
+
 function togglePF(el,val){
   const row=el.closest('.pf-grid');
   row.querySelectorAll('.pf-btn').forEach(b=>{
