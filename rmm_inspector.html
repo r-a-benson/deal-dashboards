@@ -1387,6 +1387,20 @@ const PHOTO_SVGS = {
 };
 
 // Task Detail
+// Rich task data (populated example for task 1)
+const TASK_DETAIL_DATA = {
+  1: {
+    notes: 'Critical trip hazard identified in the Kitchen Prep Area. Multiple tiles are loose or cracked, posing a significant risk to staff safety and hygiene compliance.',
+    audioDuration: '0:14',
+    timeline: [
+      {icon:'plus', bg:'#111827', iconColor:'#fff', label:'Created', sub:'Oct 20, 2023 • 09:15 AM by Inspector Sarah J.', quote:null, faded:false},
+      {icon:'person', bg:'#f3f4f6', iconColor:'#374151', label:'Assigned to Mike R.', sub:'Oct 20, 2023 • 10:30 AM', quote:null, faded:false},
+      {icon:'update', bg:'#f3f4f6', iconColor:'#374151', label:'Update by Marcus Thorne', sub:'Oct 21, 2023 • 02:45 PM by Marcus Thorne', quote:'"Replacement seal kit (Model 44-X) ordered from supplier. ETA Tuesday."', faded:false},
+      {icon:'check', bg:'#f3f4f6', iconColor:'#9ca3af', label:'Resolved', sub:'Pending completion', quote:null, faded:true},
+    ]
+  }
+};
+
 RENDERERS['task-detail'] = function(ctx) {
   const t = TASKS.find(x => x.id === (ctx && ctx.id)) || TASKS[0];
   document.getElementById('task-detail-title').textContent = t.unit;
@@ -1396,105 +1410,145 @@ RENDERERS['task-detail'] = function(ctx) {
   const sevBg = t.overdue ? '#fef2f2' : t.severity === 'critical' ? '#fef2f2' : '#fffbeb';
   const sevLabel = t.overdue ? 'OVERDUE' : t.severity === 'critical' ? 'CRITICAL SEVERITY' : 'HIGH SEVERITY';
 
+  const detail = TASK_DETAIL_DATA[t.id] || {};
+  const notes = detail.notes || '';
+  const audio = detail.audioDuration || null;
+  const timeline = detail.timeline || [
+    {icon:'plus',bg:'#111827',iconColor:'#fff',label:'Created',sub:'Today by ' + t.assignee,quote:null,faded:false},
+    {icon:'person',bg:'#f3f4f6',iconColor:'#374151',label:'Assigned to ' + t.assignee,sub:'Today',quote:null,faded:false},
+    {icon:'check',bg:'#f3f4f6',iconColor:'#9ca3af',label:'Resolved',sub:'Pending completion',quote:null,faded:true},
+  ];
+
   const el = document.getElementById('task-detail-content');
+
+  // ── timeline items builder
+  function tlIcon(item) {
+    const icons = {
+      plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+      person: '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+      update: '<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+      check: '<polyline points="20 6 9 17 4 12"/>',
+    };
+    const border = item.faded ? '2px dashed #d1d5db' : ('2px solid ' + item.bg);
+    return '<div style="position:absolute;left:-30px;top:0;width:24px;height:24px;border-radius:50%;background:' + item.bg + ';border:' + border + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+      + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="' + item.iconColor + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' + (icons[item.icon]||icons.check) + '</svg></div>';
+  }
+
+  const tlHTML = timeline.map((item, i) => {
+    const isLast = i === timeline.length - 1;
+    return '<div style="position:relative;padding-left:0;margin-bottom:' + (isLast?'0':'22px') + ';' + (item.faded?'opacity:0.45':'') + '">'
+      + tlIcon(item)
+      + '<div style="font-size:13px;font-weight:700;color:#111827">' + item.label + '</div>'
+      + '<div style="font-size:11px;color:#6b7280;margin-top:2px">' + item.sub + '</div>'
+      + (item.quote ? '<div style="margin-top:8px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;font-size:12px;color:#374151;font-style:italic;line-height:1.5">' + item.quote + '</div>' : '')
+      + '</div>';
+  }).join('');
+
+  // ── waveform SVG
+  const waveHeights = [8,14,20,28,34,28,22,16,30,38,32,24,18,28,36,30,22,16,24,32,26,18,14,10];
+  const waveform = waveHeights.map((h,i) =>
+    '<rect x="' + (i*9) + '" y="' + (40-h) + '" width="6" height="' + h + '" rx="3" fill="#3b82f6"/>'
+  ).join('');
+
   el.innerHTML =
     // ── Header card
-    '<div style="background:#fff;border-radius:10px;border:1px solid #e5e7eb;padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">'
+    '<div style="background:#fff;border-radius:10px;border:1px solid #e5e7eb;padding:16px 18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
-    + '<span style="background:' + sevBg + ';color:' + sevColor + ';font-size:10px;font-weight:700;padding:4px 10px;border-radius:4px;letter-spacing:0.4px">' + sevLabel + '</span>'
+    + '<span style="background:' + sevBg + ';color:' + sevColor + ';font-size:10px;font-weight:700;padding:4px 10px;border-radius:4px;letter-spacing:0.5px">' + sevLabel + '</span>'
     + '<span style="font-size:12px;color:#6b7280;display:flex;align-items:center;gap:4px">'
     + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
-    + 'Due: ' + t.due + (t.dueTime ? ' ' + t.dueTime : '') + '</span>'
-    + '</div>'
-    + '<div style="font-size:20px;font-weight:700;color:#111827;line-height:1.3;margin-bottom:14px">' + t.title + '</div>'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px">'
+    + 'Due: Oct 24, 2023</span></div>'
+    + '<div style="font-size:22px;font-weight:800;color:#111827;line-height:1.25;margin-bottom:14px">' + t.title + '</div>'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px">'
     + '<div style="display:flex;align-items:center;gap:10px">'
-    + '<div style="width:36px;height:36px;border-radius:50%;background:' + t.assigneeColor + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">' + t.assigneeInitials + '</div>'
-    + '<div><div style="font-size:13px;font-weight:700;color:#111827">' + t.assignee + '</div><div style="font-size:11px;color:#6b7280">Lead Inspector</div></div>'
+    + '<div style="width:38px;height:38px;border-radius:50%;background:' + t.assigneeColor + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;overflow:hidden">'
+    + (t.id===1 ? '<img src="https://i.pravatar.cc/38?img=11" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">' : t.assigneeInitials)
     + '</div>'
-    + '<button style="background:none;border:none;cursor:pointer;color:#9ca3af;padding:4px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>'
+    + '<div><div style="font-size:13px;font-weight:700;color:#111827">' + (t.id===1?'Marcus Thorne':t.assignee) + '</div>'
+    + '<div style="font-size:11px;color:#6b7280">Lead Compliance Officer</div></div>'
+    + '</div><button style="background:none;border:none;cursor:pointer;color:#9ca3af"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>'
     + '</div></div>'
 
     // ── Evidence card
-    + '<div style="background:#fff;border-radius:10px;border:1px solid #e5e7eb;padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">'
-    + '<div style="font-size:14px;font-weight:700;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px">'
-    + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Evidence</div>'
-    // Photo upload area
-    + '<div onclick="nav(\'photo-capture\')" style="border:2px dashed #d1d5db;border-radius:10px;padding:32px 16px;text-align:center;cursor:pointer;margin-bottom:10px;transition:border-color .15s" onmouseenter="this.style.borderColor=\'#0A1B4A\'" onmouseleave="this.style.borderColor=\'#d1d5db\'">'
-    + (t.photo ? '<img src="./' + t.photo + '" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px">'
-      : '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" style="margin:0 auto 8px"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>'
-      + '<div style="font-size:13px;color:#6b7280;font-weight:600">Add Photo</div>')
-    + '</div>'
-    // Audio
-    + '<div onclick="nav(\'voice-notes\')" style="border:2px dashed #d1d5db;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:10px;transition:border-color .15s" onmouseenter="this.style.borderColor=\'#0A1B4A\'" onmouseleave="this.style.borderColor=\'#d1d5db\'">'
-    + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'
-    + '<span style="font-size:13px;color:#6b7280;font-weight:600">Add Audio Recording</span></div>'
-    // Notes
+    + '<div style="background:#fff;border-radius:10px;border:1px solid #e5e7eb;padding:16px 18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">'
+    + '<div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px">'
+    + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Evidence</div>'
+    // Photo row: existing photo + add another
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+    + (t.photo
+      ? '<div style="border-radius:10px;overflow:hidden;aspect-ratio:4/3"><img src="./' + t.photo + '" style="width:100%;height:100%;object-fit:cover;display:block"></div>'
+      : '<div style="border:2px dashed #d1d5db;border-radius:10px;aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer" onclick="nav(\'photo-capture\')"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><span style="font-size:11px;color:#9ca3af;font-weight:600">Add Photo</span></div>')
+    + '<div onclick="nav(\'photo-capture\')" style="border:2px dashed #d1d5db;border-radius:10px;aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer">'
+    + '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>'
+    + '<span style="font-size:11px;color:#9ca3af;font-weight:600">Add Photo</span></div></div>'
+    // Audio waveform
+    + (audio
+      ? '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:10px;cursor:pointer" onclick="nav(\'voice-notes\')">'
+        + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>'
+        + '<div style="flex:1"><svg width="' + (waveHeights.length*9) + '" height="40" viewBox="0 0 ' + (waveHeights.length*9) + ' 40">' + waveform + '</svg></div>'
+        + '<span style="font-size:12px;font-weight:700;color:#3b82f6">' + audio + '</span></div>'
+      : '<div onclick="nav(\'voice-notes\')" style="border:2px dashed #d1d5db;border-radius:10px;padding:13px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:10px">'
+        + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>'
+        + '<span style="font-size:13px;color:#6b7280;font-weight:600">Add Audio Recording</span></div>')
+    // Violation notes
     + '<div style="background:#f9fafb;border-radius:8px;padding:12px 14px">'
     + '<div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px">Violation Notes</div>'
-    + '<textarea rows="3" placeholder="Add notes about this violation…" style="width:100%;border:none;background:transparent;font-size:13px;font-family:inherit;color:#111827;resize:none;outline:none"></textarea>'
+    + (notes
+      ? '<div style="font-size:13px;color:#374151;line-height:1.55">' + notes + '</div>'
+      : '<div style="font-size:13px;color:#9ca3af;font-style:italic">No notes added yet</div>')
     + '</div></div>'
 
     // ── Resolution card
-    + '<div style="background:#fff;border-radius:10px;border:1px solid #e5e7eb;padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">'
-    + '<div style="font-size:14px;font-weight:700;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px">'
+    + '<div style="background:#fff;border-radius:10px;border:1px solid #e5e7eb;padding:16px 18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">'
+    + '<div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px">'
     + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>Resolution</div>'
-    // Add Update row
-    + '<div style="display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:8px;cursor:pointer" onclick="this.nextSibling.style.display=this.nextSibling.style.display===\'none\'?\'block\':\'none\'">'
+    // Add Update
+    + '<div id="td-update-row" style="display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:13px 14px;margin-bottom:8px;cursor:pointer" onclick="toggleTdUpdate()">'
     + '<div style="display:flex;align-items:center;gap:10px">'
-    + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
-    + '<div><div style="font-size:13px;font-weight:700;color:#111827">Add Update</div><div style="font-size:11px;color:#6b7280">Log progress or findings</div></div>'
-    + '</div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>'
-    + '<div style="display:none;padding:10px 0 4px">'
-    + '<textarea rows="3" placeholder="Describe the update or finding…" style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-family:inherit;resize:none;outline:none"></textarea>'
+    + '<div style="width:32px;height:32px;border-radius:8px;background:#e5e7eb;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>'
+    + '<div><div style="font-size:13px;font-weight:700;color:#111827">Add Update</div><div style="font-size:11px;color:#6b7280">Log progress or findings</div></div></div>'
+    + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>'
+    + '<div id="td-update-box" style="display:none;margin-bottom:8px">'
+    + '<textarea rows="3" placeholder="Describe the update or finding…" style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:13px;font-family:inherit;resize:none;outline:none;display:block"></textarea>'
     + '</div>'
-    // Mark Resolved row
-    + '<div style="display:flex;align-items:center;justify-content:space-between;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;margin-bottom:8px;cursor:pointer">'
+    // Mark Resolved
+    + '<div style="display:flex;align-items:center;justify-content:space-between;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:13px 14px;margin-bottom:8px;cursor:pointer">'
     + '<div style="display:flex;align-items:center;gap:10px">'
-    + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
-    + '<div><div style="font-size:13px;font-weight:700;color:#16a34a">Mark Resolved</div><div style="font-size:11px;color:#16a34a;opacity:0.8">Confirm task completion</div></div>'
-    + '</div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>'
-    // Reinspection + Escalate grid
+    + '<div style="width:32px;height:32px;border-radius:8px;background:#dcfce7;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>'
+    + '<div><div style="font-size:13px;font-weight:700;color:#16a34a">Mark Resolved</div><div style="font-size:11px;color:#16a34a;opacity:0.85">Confirm task completion</div></div></div>'
+    + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>'
+    // Reinspection + Escalate
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
-    + '<div onclick="nav(\'new-inspection\')" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center;cursor:pointer">'
-    + '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2" style="margin:0 auto 6px;display:block"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
-    + '<div style="font-size:12px;font-weight:700;color:#374151">Request Reinspection</div></div>'
-    + '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;text-align:center;cursor:pointer">'
-    + '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" style="margin:0 auto 6px;display:block"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+    + '<div onclick="nav(\'new-inspection\')" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 12px;text-align:center;cursor:pointer">'
+    + '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2" style="margin:0 auto 6px;display:block"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+    + '<div style="font-size:12px;font-weight:700;color:#374151;line-height:1.3">Request Reinspection</div></div>'
+    + '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 12px;text-align:center;cursor:pointer">'
+    + '<div style="font-size:22px;color:#dc2626;font-weight:700;line-height:1;margin-bottom:4px">!</div>'
     + '<div style="font-size:12px;font-weight:700;color:#dc2626">Escalate Issue</div></div>'
     + '</div></div>'
 
     // ── Task Timeline card
-    + '<div style="background:#fff;border-radius:10px;border:1px solid #e5e7eb;padding:16px 18px;margin-bottom:80px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">'
-    + '<div style="font-size:14px;font-weight:700;color:#111827;margin-bottom:16px;display:flex;align-items:center;gap:8px">'
+    + '<div style="background:#fff;border-radius:10px;border:1px solid #e5e7eb;padding:16px 18px;margin-bottom:90px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">'
+    + '<div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:18px;display:flex;align-items:center;gap:8px">'
     + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Task Timeline</div>'
-    + '<div style="position:relative;padding-left:28px">'
-    + '<div style="position:absolute;left:11px;top:0;bottom:0;width:2px;background:#e5e7eb"></div>'
-    // Created
-    + '<div style="position:relative;margin-bottom:20px">'
-    + '<div style="position:absolute;left:-28px;width:22px;height:22px;border-radius:50%;background:#111827;display:flex;align-items:center;justify-content:center"><svg width="10" height="10" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>'
-    + '<div style="font-size:13px;font-weight:700;color:#111827">Created</div>'
-    + '<div style="font-size:11px;color:#6b7280;margin-top:1px">Today · by Inspector ' + t.assignee + '</div></div>'
-    // Assigned
-    + '<div style="position:relative;margin-bottom:20px">'
-    + '<div style="position:absolute;left:-28px;width:22px;height:22px;border-radius:50%;background:#f3f4f6;border:2px solid #e5e7eb;display:flex;align-items:center;justify-content:center"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'
-    + '<div style="font-size:13px;font-weight:700;color:#111827">Assigned to ' + t.assignee + '</div>'
-    + '<div style="font-size:11px;color:#6b7280;margin-top:1px">Today</div></div>'
-    // Resolved (pending)
-    + '<div style="position:relative;opacity:0.4">'
-    + '<div style="position:absolute;left:-28px;width:22px;height:22px;border-radius:50%;background:#f3f4f6;border:2px dashed #d1d5db;display:flex;align-items:center;justify-content:center"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>'
-    + '<div style="font-size:13px;font-weight:700;color:#374151">Resolved</div>'
-    + '<div style="font-size:11px;color:#9ca3af;margin-top:1px">Pending completion</div></div>'
+    + '<div style="position:relative;padding-left:34px">'
+    + '<div style="position:absolute;left:11px;top:6px;bottom:6px;width:2px;background:#e5e7eb"></div>'
+    + tlHTML
     + '</div></div>'
 
     // ── Sticky bottom bar
-    + '<div style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:12px 20px;display:flex;gap:10px;z-index:30">'
-    + '<button style="flex:1;padding:12px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;color:#374151">'
+    + '<div style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:12px 16px;display:flex;gap:10px;z-index:40">'
+    + '<button style="flex:1;padding:13px;background:#111827;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;color:#fff">'
     + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save Update</button>'
-    + '<button style="flex:1;padding:12px;background:#16a34a;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#fff;display:flex;align-items:center;justify-content:center;gap:7px">'
+    + '<button style="flex:1;padding:13px;background:#16a34a;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#fff;display:flex;align-items:center;justify-content:center;gap:7px">'
     + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Mark Complete</button>'
     + '</div>';
 };
+
+function toggleTdUpdate() {
+  const box = document.getElementById('td-update-box');
+  if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
 
 RENDERERS['tasks'] = function() {
   const open = TASKS.filter(t=>!t.overdue && t.status!=='completed').length;
@@ -1529,10 +1583,10 @@ function renderTaskCard(t, hideLocationTag=false) {
   const dueText = t.due + (t.dueTime ? `<br><span style="font-size:11px">DUE ${t.dueTime}</span>` : '');
 
   const ctaBtn = t.overdue
-    ? `<button style="padding:9px 18px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Resolve Now</button>`
+    ? `<button onclick="nav('task-detail',{id:${t.id}})" style="padding:9px 18px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Resolve Now</button>`
     : t.status==='in-progress'
-    ? `<button style="padding:9px 18px;background:#111827;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Take Action</button>`
-    : `<button style="padding:9px 18px;background:#fff;color:#374151;border:1px solid #d1d5db;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Update</button>`;
+    ? `<button onclick="nav('task-detail',{id:${t.id}})" style="padding:9px 18px;background:#111827;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Take Action</button>`
+    : `<button onclick="nav('task-detail',{id:${t.id}})" style="padding:9px 18px;background:#fff;color:#374151;border:1px solid #d1d5db;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Update</button>`;
 
   const statusChip = `<span style="background:#f3f4f6;color:#374151;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;display:inline-flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${t.status==='in-progress'?'In Progress':t.status==='open'?'Open':'Pending'}</span>`;
 
@@ -1575,7 +1629,7 @@ function renderTaskCard(t, hideLocationTag=false) {
       </div>
       <div style="padding:10px 16px 14px;border-top:1px solid #f3f4f6;display:flex;align-items:center;justify-content:flex-end">
         <span style="font-size:12px;font-weight:700;color:#3b82f6;display:flex;align-items:center;gap:4px">
-          View Details
+          Open Task
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
         </span>
       </div>
