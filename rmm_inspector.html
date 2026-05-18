@@ -60,8 +60,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 .suite-tile .pdot{position:absolute;top:8px;right:8px;width:6px;height:6px;
                   border-radius:50%;background:#10b981}
 .suite-tile .pdot.dim{background:#fbbf24}
-.suite-tile.active .pn::after{content:' • Active';color:#60a5fa;font-size:9px;
-                               font-weight:600;letter-spacing:0.3px}
+.suite-tile.active .pn::after{content:''}
+.prod-id{padding:8px 14px 10px;border-bottom:1px solid rgba(255,255,255,0.08);
+         display:flex;align-items:center;gap:7px}
+.prod-id .prod-dot{width:7px;height:7px;border-radius:50%;background:#10b981;flex-shrink:0}
+.prod-id .prod-name{font-size:12px;font-weight:700;color:#fff;letter-spacing:0.2px}
+.prod-id .prod-name b{color:#60a5fa}
+.prod-id .prod-tag{font-size:10px;color:rgba(255,255,255,0.45);margin-top:1px}
 
 .userbox{padding:14px 20px;border-top:1px solid rgba(255,255,255,0.08);
          display:flex;align-items:center;gap:10px;font-size:12px;flex-shrink:0}
@@ -307,6 +312,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
     <div class="logo-card">
       <img src="RRM_logo.svg" alt="RRM">
     </div>
+  </div>
+  <div class="prod-id">
+    <div class="prod-dot"></div>
+    <div><div class="prod-name">RMM<b>Inspector</b></div><div class="prod-tag">Inspections &amp; Food Safety</div></div>
   </div>
   <nav class="nav">
     <div class="nav-section">Overview</div>
