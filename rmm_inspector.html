@@ -1251,7 +1251,7 @@ RENDERERS['location-detail'] = function(ctx) {
       </div>
       <div style="display:flex;gap:8px;margin-top:12px">
         <button class="btn-primary" onclick="nav('new-inspection')" style="flex:1;justify-content:center">Start Inspection</button>
-        <button class="btn-outline" onclick="nav('location-tasks',{unit:loc.name})" style="flex:1;justify-content:center">View Tasks</button>
+        <button class="btn-outline" onclick="nav('location-tasks',{unit:'${loc.name}'})" style="flex:1;justify-content:center">View Tasks</button>
         <button class="btn-outline" onclick="nav('alerts')" style="flex:1;justify-content:center">View Risks</button>
       </div>
     </div>
