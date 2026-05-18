@@ -1448,44 +1448,42 @@ function renderTaskCard(t, hideLocationTag=false) {
 RENDERERS['location-tasks'] = function(ctx) {
   const unitName = ctx && ctx.unit ? ctx.unit : '';
   const locTasks = TASKS.filter(t => t.unit === unitName);
-  const loc = LOCATIONS.find(l => l.name === unitName) || {};
+  const loc = LOCATIONS.find(l => l.name === unitName) || {score:0,lastAudit:'N/A',id:1};
 
   document.getElementById('loc-tasks-title').textContent = unitName || 'Unit Tasks';
   document.getElementById('loc-tasks-sub').textContent =
-    `${locTasks.length} task${locTasks.length!==1?'s':''} · ${locTasks.filter(t=>t.overdue).length} overdue`;
+    locTasks.length + ' task' + (locTasks.length!==1?'s':'') + ' · ' + locTasks.filter(t=>t.overdue).length + ' overdue';
 
   const open = locTasks.filter(t=>!t.overdue && t.status!=='completed').length;
   const overdue = locTasks.filter(t=>t.overdue).length;
+  const score = loc.score || 0;
+  const scoreBg = score<70?'#fee2e2':score<85?'#fef3c7':'#dcfce7';
+  const overdueBg = overdue?'#fef2f2':'#f9fafb';
+  const overdueBorder = overdue?'#fecaca':'#e5e7eb';
+  const overdueColor = overdue?'#dc2626':'#111827';
+  const locId = loc.id || 1;
 
-  document.getElementById('location-tasks-content').innerHTML = `
-    <!-- Unit summary strip -->
-    <div style="background:#fff;border-radius:10px;border:1px solid #e5e7eb;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
-      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:180px">
-        <div style="width:40px;height:40px;border-radius:8px;background:${loc.score<70?'#fee2e2':loc.score<85?'#fef3c7':'#dcfce7'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <span style="font-size:13px;font-weight:800;color:${scoreColor(loc.score||0)}">${loc.score||'—'}%</span>
-        </div>
-        <div>
-          <div style="font-size:14px;font-weight:700;color:#111827">${unitName}</div>
-          <div style="font-size:11px;color:#6b7280">Last audit: ${loc.lastAudit||'N/A'}</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:10px">
-        <div style="text-align:center;padding:6px 12px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb">
-          <div style="font-size:18px;font-weight:700;color:#111827">${open}</div>
-          <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px">Open</div>
-        </div>
-        <div style="text-align:center;padding:6px 12px;background:${overdue?'#fef2f2':'#f9fafb'};border-radius:8px;border:1px solid ${overdue?'#fecaca':'#e5e7eb'}">
-          <div style="font-size:18px;font-weight:700;color:${overdue?'#dc2626':'#111827'}">${overdue}</div>
-          <div style="font-size:10px;font-weight:700;color:${overdue?'#dc2626':'#6b7280'};text-transform:uppercase;letter-spacing:0.4px">Overdue</div>
-        </div>
-      </div>
-      <button onclick="nav('location-detail',{id:${loc.id||1}})" style="font-size:12px;font-weight:600;color:#3b82f6;background:none;border:none;cursor:pointer;white-space:nowrap">View Location →</button>
-    </div>
+  const strip = '<div style="background:#fff;border-radius:10px;border:1px solid #e5e7eb;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,0.04)">'
+    + '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:180px">'
+    + '<div style="width:40px;height:40px;border-radius:8px;background:' + scoreBg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+    + '<span style="font-size:13px;font-weight:800;color:' + scoreColor(score) + '">' + (score||'—') + '%</span></div>'
+    + '<div><div style="font-size:14px;font-weight:700;color:#111827">' + unitName + '</div>'
+    + '<div style="font-size:11px;color:#6b7280">Last audit: ' + (loc.lastAudit||'N/A') + '</div></div></div>'
+    + '<div style="display:flex;gap:10px">'
+    + '<div style="text-align:center;padding:6px 12px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb">'
+    + '<div style="font-size:18px;font-weight:700;color:#111827">' + open + '</div>'
+    + '<div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px">Open</div></div>'
+    + '<div style="text-align:center;padding:6px 12px;background:' + overdueBg + ';border-radius:8px;border:1px solid ' + overdueBorder + '">'
+    + '<div style="font-size:18px;font-weight:700;color:' + overdueColor + '">' + overdue + '</div>'
+    + '<div style="font-size:10px;font-weight:700;color:' + overdueColor + ';text-transform:uppercase;letter-spacing:0.4px">Overdue</div></div></div>'
+    + '<button onclick="nav(\'location-detail\',{id:' + locId + '})" style="font-size:12px;font-weight:600;color:#3b82f6;background:none;border:none;cursor:pointer;white-space:nowrap">View Location →</button>'
+    + '</div>';
 
-    ${locTasks.length
-      ? `<div style="display:flex;flex-direction:column;gap:14px">${locTasks.map(t=>renderTaskCard(t,true)).join('')}</div>`
-      : `<div style="text-align:center;padding:48px 20px;color:#9ca3af;font-size:14px">No tasks for this location</div>`
-    }`;
+  const cards = locTasks.length
+    ? '<div style="display:flex;flex-direction:column;gap:14px">' + locTasks.map(t=>renderTaskCard(t,true)).join('') + '</div>'
+    : '<div style="text-align:center;padding:48px 20px;color:#9ca3af;font-size:14px">No tasks for this location</div>';
+
+  document.getElementById('location-tasks-content').innerHTML = strip + cards;
 };
 
 function filterTasks(type, btn) {
