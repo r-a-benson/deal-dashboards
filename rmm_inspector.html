@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RMMInspector</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+  darkMode:"class",
+  theme:{extend:{
+    colors:{
+      "primary":"#000000","on-primary":"#ffffff","primary-container":"#131b2e","on-primary-container":"#7c839b",
+      "secondary":"#006e2f","on-secondary":"#ffffff","secondary-container":"#6bff8f","on-secondary-container":"#007432",
+      "tertiary":"#000000","tertiary-container":"#001a42","on-tertiary-container":"#3980f4",
+      "error":"#ba1a1a","on-error":"#ffffff","error-container":"#ffdad6","on-error-container":"#93000a",
+      "background":"#f7f9fb","on-background":"#191c1e",
+      "surface":"#f7f9fb","on-surface":"#191c1e","on-surface-variant":"#45464d",
+      "surface-dim":"#d8dadc","surface-bright":"#f7f9fb",
+      "surface-container-lowest":"#ffffff","surface-container-low":"#f2f4f6",
+      "surface-container":"#eceef0","surface-container-high":"#e6e8ea","surface-container-highest":"#e0e3e5",
+      "outline":"#76777d","outline-variant":"#c6c6cd",
+      "inverse-surface":"#2d3133","inverse-on-surface":"#eff1f3","inverse-primary":"#bec6e0",
+    },
+    fontFamily:{"sans":["Inter","sans-serif"]},
+  }}
+}
+</script>
+<style>
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f7f9fb;color:#191c1e;min-height:100dvh}
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;font-size:22px;line-height:1}
+.ms-fill{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24}
+.screen{display:none}
+.screen.active{display:block}
+.hide-scroll::-webkit-scrollbar{display:none}
+.hide-scroll{-ms-overflow-style:none;scrollbar-width:none}
+.nav-item.active-nav{background:#131b2e;color:#bec6e0}
+.nav-item{display:flex;align-items:center;gap:14px;padding:10px 20px;border-radius:0 999px 999px 0;color:#45464d;font-size:14px;font-weight:500;cursor:pointer;transition:background .15s}
+.nav-item:hover{background:#e0e3e5}
+.btn-primary{background:#131b2e;color:#fff;border:none;border-radius:12px;padding:14px 20px;font-size:13px;font-weight:700;letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:opacity .15s;width:100%}
+.btn-primary:hover{opacity:.85}
+.btn-outline{background:#fff;color:#131b2e;border:1.5px solid #131b2e;border-radius:12px;padding:13px 20px;font-size:13px;font-weight:700;letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .15s;width:100%}
+.btn-outline:hover{background:#f2f4f6}
+.card{background:#fff;border:1px solid #c6c6cd;border-radius:12px;padding:18px}
+.chip{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.3px}
+.chip-error{background:#ffdad6;color:#93000a}
+.chip-warn{background:#fff3cd;color:#7c4a00}
+.chip-ok{background:#d0f0dc;color:#005321}
+.chip-neutral{background:#e0e3e5;color:#45464d}
+.score-crit{color:#ba1a1a}
+.score-warn{color:#7c4a00}
+.score-ok{color:#006e2f}
+.score-good{color:#006e2f}
+.toggle-wrap{display:flex;align-items:center;gap:12px}
+.toggle{position:relative;width:48px;height:26px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#c6c6cd;border-radius:999px;cursor:pointer;transition:.2s}
+.toggle-slider:before{content:'';position:absolute;height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked + .toggle-slider{background:#006e2f}
+.toggle input:checked + .toggle-slider:before{transform:translateX(22px)}
+.ring-svg{transform:rotate(-90deg)}
+.main-content{min-height:100dvh;padding-bottom:80px}
+@media(min-width:1024px){.main-content{padding-bottom:24px;padding-left:240px}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     DESKTOP SIDEBAR
+═══════════════════════════════════════════════ -->
+<aside id="sidebar" class="hidden lg:flex flex-col fixed left-0 top-0 z-40 h-screen w-[240px] bg-surface-container border-r border-outline-variant">
+  <div class="px-5 py-5 border-b border-outline-variant">
+    <div class="text-[18px] font-bold text-primary tracking-tight">RMMInspector</div>
+    <div class="text-[11px] text-on-surface-variant mt-0.5">West Coast Region</div>
+  </div>
+  <nav class="flex-1 overflow-y-auto py-3 pr-3">
+    <div class="mb-1">
+      <div class="px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Overview</div>
+      <div class="nav-item active-nav" onclick="nav('dashboard')"><span class="material-symbols-outlined">dashboard</span>Dashboard</div>
+      <div class="nav-item" onclick="nav('alerts')"><span class="material-symbols-outlined">warning</span>Critical Alerts<span id="alert-badge" class="ml-auto bg-error text-on-error text-[10px] font-bold rounded-full px-1.5 py-0.5">3</span></div>
+      <div class="nav-item" onclick="nav('locations')"><span class="material-symbols-outlined">store</span>Locations</div>
+    </div>
+    <div class="mb-1">
+      <div class="px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Inspections</div>
+      <div class="nav-item" onclick="nav('inspections')"><span class="material-symbols-outlined">assignment</span>All Inspections</div>
+      <div class="nav-item" onclick="nav('new-inspection')"><span class="material-symbols-outlined">add_circle</span>New Inspection</div>
+    </div>
+    <div class="mb-1">
+      <div class="px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Analytics</div>
+      <div class="nav-item" onclick="nav('reports')"><span class="material-symbols-outlined">bar_chart</span>Reports</div>
+    </div>
+    <div>
+      <div class="px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Account</div>
+      <div class="nav-item" onclick="nav('profile')"><span class="material-symbols-outlined">person</span>Profile</div>
+      <div class="nav-item" onclick="nav('settings')"><span class="material-symbols-outlined">settings</span>Settings</div>
+    </div>
+  </nav>
+  <div class="px-4 py-4 border-t border-outline-variant flex items-center gap-3">
+    <div class="w-9 h-9 rounded-full bg-primary-container flex items-center justify-content-center text-on-primary-container font-bold text-sm flex-shrink-0 flex items-center justify-center">MR</div>
+    <div class="min-w-0">
+      <div class="text-[13px] font-semibold truncate">Mike Rodriguez</div>
+      <div class="text-[11px] text-on-surface-variant">Senior Inspector</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════════
+     MOBILE TOP HEADER
+═══════════════════════════════════════════════ -->
+<header id="top-header" class="lg:hidden sticky top-0 z-30 bg-surface-container-low border-b border-outline-variant flex items-center justify-between px-4 h-14">
+  <div>
+    <div class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant" id="header-region">REGION</div>
+    <div class="text-[16px] font-bold text-primary" id="header-title">West Coast Region</div>
+  </div>
+  <div class="flex items-center gap-2">
+    <button onclick="nav('alerts')" class="relative p-2 rounded-full hover:bg-surface-container-high">
+      <span class="material-symbols-outlined text-primary">notifications</span>
+      <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full"></span>
+    </button>
+    <button onclick="nav('profile')" class="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-[12px] font-bold text-on-primary-container">MR</button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN SCREENS CONTAINER
+═══════════════════════════════════════════════ -->
+<main class="main-content">
+
+<!-- ─────────────────────────────────────────────
+     SCREEN 1 · Executive Dashboard
+───────────────────────────────────────────── -->
+<div id="screen-dashboard" class="screen active">
+  <!-- Desktop topbar -->
+  <div class="hidden lg:flex items-center justify-between px-7 h-14 bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
+    <div>
+      <div class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Overview</div>
+      <div class="text-[18px] font-bold text-primary">Executive Dashboard</div>
+    </div>
+    <button onclick="nav('new-inspection')" class="flex items-center gap-2 bg-primary-container text-on-primary-container px-4 py-2 rounded-xl text-[13px] font-bold hover:opacity-80">
+      <span class="material-symbols-outlined" style="font-size:18px">add</span>New Inspection
+    </button>
+  </div>
+
+  <div class="p-4 lg:p-6 space-y-5">
+    <!-- KPI Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="card">
+        <div class="flex justify-between items-start mb-2">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Compliance</div>
+          <span class="material-symbols-outlined text-secondary" style="font-size:18px">trending_up</span>
+        </div>
+        <div class="text-[28px] font-bold text-primary leading-none">94.2%</div>
+        <div class="text-[11px] text-secondary font-bold mt-1">+2.4% vs last mo</div>
+      </div>
+      <div class="card">
+        <div class="flex justify-between items-start mb-2">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Critical Risks</div>
+          <span class="material-symbols-outlined text-error" style="font-size:18px">warning</span>
+        </div>
+        <div class="text-[28px] font-bold text-primary leading-none">12</div>
+        <div class="text-[11px] text-on-surface-variant font-bold mt-1">Across 4 locations</div>
+      </div>
+      <div class="card">
+        <div class="flex justify-between items-start mb-2">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Overdue Actions</div>
+          <span class="material-symbols-outlined text-outline" style="font-size:18px">history</span>
+        </div>
+        <div class="text-[28px] font-bold text-primary leading-none">08</div>
+        <div class="text-[11px] text-error font-bold mt-1">Needs attention</div>
+      </div>
+      <div class="card">
+        <div class="flex justify-between items-start mb-2">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Completion</div>
+          <span class="material-symbols-outlined text-primary" style="font-size:18px">checklist</span>
+        </div>
+        <div class="text-[28px] font-bold text-primary leading-none">88%</div>
+        <div class="text-[11px] text-on-surface-variant font-bold mt-1">Goal: 95%</div>
+      </div>
+    </div>
+
+    <!-- Multi-Location Summary -->
+    <div>
+      <div class="flex justify-between items-center mb-3">
+        <div class="text-[15px] font-bold">Multi-Location Summary</div>
+        <button onclick="nav('locations')" class="text-[12px] font-bold text-primary flex items-center gap-1 hover:underline">Manage <span class="material-symbols-outlined" style="font-size:16px">chevron_right</span></button>
+      </div>
+      <div class="flex overflow-x-auto gap-3 hide-scroll -mx-4 px-4 lg:grid lg:grid-cols-3 lg:mx-0 lg:px-0 pb-2">
+        <div onclick="nav('location-detail',{id:1})" class="min-w-[260px] lg:min-w-0 card cursor-pointer hover:border-outline transition-colors">
+          <div class="flex justify-between items-start mb-3">
+            <div><div class="text-[13px] font-bold">South Station Deli</div><div class="text-[11px] text-on-surface-variant">Last Audit: 2d ago</div></div>
+            <span class="chip chip-error">2 CRITICAL</span>
+          </div>
+          <div class="flex items-end justify-between">
+            <div><div class="text-[24px] font-bold score-crit">64%</div><svg class="w-20 h-7 mt-1" viewBox="0 0 100 30"><polyline points="0,25 20,28 40,15 60,25 80,20 100,28" fill="none" stroke="#ba1a1a" stroke-width="2"/></svg></div>
+            <span class="material-symbols-outlined text-error">error_outline</span>
+          </div>
+        </div>
+        <div onclick="nav('location-detail',{id:2})" class="min-w-[260px] lg:min-w-0 card cursor-pointer hover:border-outline transition-colors">
+          <div class="flex justify-between items-start mb-3">
+            <div><div class="text-[13px] font-bold">Broadway Express</div><div class="text-[11px] text-on-surface-variant">Last Audit: 5h ago</div></div>
+            <span class="chip chip-warn">1 CRITICAL</span>
+          </div>
+          <div class="flex items-end justify-between">
+            <div><div class="text-[24px] font-bold score-warn">72%</div><svg class="w-20 h-7 mt-1" viewBox="0 0 100 30"><polyline points="0,20 20,10 40,15 60,5 80,12 100,8" fill="none" stroke="#7c4a00" stroke-width="2"/></svg></div>
+            <span class="material-symbols-outlined text-on-surface-variant">info_outline</span>
+          </div>
+        </div>
+        <div onclick="nav('location-detail',{id:3})" class="min-w-[260px] lg:min-w-0 card cursor-pointer hover:border-outline transition-colors">
+          <div class="flex justify-between items-start mb-3">
+            <div><div class="text-[13px] font-bold">Grand Central Kitchen</div><div class="text-[11px] text-on-surface-variant">Last Audit: 12h ago</div></div>
+            <span class="chip chip-ok">0 CRITICAL</span>
+          </div>
+          <div class="flex items-end justify-between">
+            <div><div class="text-[24px] font-bold score-ok">98%</div><svg class="w-20 h-7 mt-1" viewBox="0 0 100 30"><polyline points="0,15 20,5 40,8 60,2 80,5 100,3" fill="none" stroke="#006e2f" stroke-width="2"/></svg></div>
+            <span class="material-symbols-outlined text-secondary">check_circle</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="card">
+        <div class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-4">Compliance Trend</div>
+        <div class="flex items-end justify-between gap-1.5 h-36">
+          <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t bg-primary/10 hover:bg-primary transition-colors cursor-pointer" style="height:60%"></div><div class="text-[9px] font-bold text-outline uppercase">Mon</div></div>
+          <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t bg-primary/10 hover:bg-primary transition-colors cursor-pointer" style="height:75%"></div><div class="text-[9px] font-bold text-outline uppercase">Tue</div></div>
+          <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t bg-primary/10 hover:bg-primary transition-colors cursor-pointer" style="height:85%"></div><div class="text-[9px] font-bold text-outline uppercase">Wed</div></div>
+          <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t bg-primary/10 hover:bg-primary transition-colors cursor-pointer" style="height:70%"></div><div class="text-[9px] font-bold text-outline uppercase">Thu</div></div>
+          <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t bg-primary/15 hover:bg-primary transition-colors cursor-pointer" style="height:90%"></div><div class="text-[9px] font-bold text-outline uppercase">Fri</div></div>
+          <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t bg-primary/20 hover:bg-primary transition-colors cursor-pointer" style="height:94%"></div><div class="text-[9px] font-bold text-outline uppercase">Sat</div></div>
+          <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t bg-primary cursor-pointer" style="height:96%"></div><div class="text-[9px] font-bold text-outline uppercase">Sun</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-4">Violations by Category</div>
+        <div class="space-y-3">
+          <div><div class="flex justify-between text-[12px] font-semibold mb-1"><span>Food Storage</span><span class="text-error">42%</span></div><div class="h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-error rounded-full" style="width:42%"></div></div></div>
+          <div><div class="flex justify-between text-[12px] font-semibold mb-1"><span>Personal Hygiene</span><span class="text-primary">28%</span></div><div class="h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-primary rounded-full" style="width:28%"></div></div></div>
+          <div><div class="flex justify-between text-[12px] font-semibold mb-1"><span>Equipment Sanitation</span><span class="score-warn">18%</span></div><div class="h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full rounded-full" style="width:18%;background:#7c4a00"></div></div></div>
+          <div><div class="flex justify-between text-[12px] font-semibold mb-1"><span>Pest Control</span><span class="text-on-surface-variant">12%</span></div><div class="h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-outline rounded-full" style="width:12%"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts + Activity -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div>
+        <div class="flex justify-between items-center mb-3"><div class="text-[15px] font-bold">Critical Alerts</div><button onclick="nav('alerts')" class="text-[12px] font-bold text-primary hover:underline">View all</button></div>
+        <div class="space-y-2">
+          <div onclick="nav('violation-detail',{id:1})" class="flex items-center gap-3 bg-error-container/20 border-l-4 border-error p-3 rounded-r-xl cursor-pointer hover:bg-error-container/30">
+            <span class="material-symbols-outlined text-error flex-shrink-0">emergency</span>
+            <div class="flex-1 min-w-0"><div class="text-[13px] font-bold truncate">Failed Inspection: Savory Bistro</div><div class="text-[11px] text-on-surface-variant">Immediate — Health Safety</div></div>
+            <button onclick="event.stopPropagation();resolveAlert(1)" class="text-error text-[11px] font-bold flex-shrink-0">Resolve</button>
+          </div>
+          <div onclick="nav('violation-detail',{id:2})" class="flex items-center gap-3 card p-3 cursor-pointer hover:border-outline">
+            <span class="material-symbols-outlined text-on-surface-variant flex-shrink-0">thermostat</span>
+            <div class="flex-1 min-w-0"><div class="text-[13px] font-bold truncate">Temp Alert #402 — Walk-in</div><div class="text-[11px] text-on-surface-variant">48°F detected (threshold 40°F)</div></div>
+            <span class="text-[11px] text-on-surface-variant flex-shrink-0">12m</span>
+          </div>
+          <div onclick="nav('violation-detail',{id:3})" class="flex items-center gap-3 card p-3 cursor-pointer hover:border-outline">
+            <span class="material-symbols-outlined text-on-surface-variant flex-shrink-0">cleaning_services</span>
+            <div class="flex-1 min-w-0"><div class="text-[13px] font-bold truncate">Sanitation Overdue — North End</div><div class="text-[11px] text-on-surface-variant">Deep clean 4 days overdue</div></div>
+            <span class="text-[11px] text-on-surface-variant flex-shrink-0">4d</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="text-[15px] font-bold mb-3">Recent Activity</div>
+        <div class="space-y-2">
+          <div class="flex justify-between items-center py-2 border-b border-outline-variant"><span class="text-[13px] text-on-surface-variant">Inspection Completed — Broadway</span><span class="text-[12px] font-bold">1h ago</span></div>
+          <div class="flex justify-between items-center py-2 border-b border-outline-variant"><span class="text-[13px] text-on-surface-variant">Risk Resolved — Mike R.</span><span class="text-[12px] font-bold">3h ago</span></div>
+          <div class="flex justify-between items-center py-2 border-b border-outline-variant"><span class="text-[13px] text-error">Audit Failed — North End</span><span class="text-[12px] font-bold text-error">Yesterday</span></div>
+          <div class="flex justify-between items-center py-2 border-b border-outline-variant"><span class="text-[13px] text-on-surface-variant">New Inspection Started — Harbor View</span><span class="text-[12px] font-bold">2d ago</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="flex flex-col gap-3 lg:flex-row">
+      <button onclick="nav('reports')" class="btn-primary"><span class="material-symbols-outlined">summarize</span>VIEW FULL REPORTS</button>
+      <button onclick="nav('alerts')" class="btn-outline"><span class="material-symbols-outlined">report_problem</span>OPEN RISKS (12)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────
+     SCREEN 2 · Inspections List
+───────────────────────────────────────────── -->
+<div id="screen-inspections" class="screen">
+  <div class="hidden lg:flex items-center justify-between px-7 h-14 bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
+    <div class="text-[18px] font-bold">All Inspections</div>
+    <button onclick="nav('new-inspection')" class="flex items-center gap-2 bg-primary-container text-on-primary-container px-4 py-2 rounded-xl text-[13px] font-bold hover:opacity-80"><span class="material-symbols-outlined" style="font-size:18px">add</span>New</button>
+  </div>
+  <div class="p-4 lg:p-6 space-y-4">
+    <!-- Search + Filter -->
+    <div class="flex gap-3">
+      <div class="flex-1 flex items-center gap-2 bg-white border border-outline-variant rounded-xl px-3 py-2.5">
+        <span class="material-symbols-outlined text-outline" style="font-size:20px">search</span>
+        <input type="text" placeholder="Search inspections…" class="flex-1 border-none outline-none text-[14px] bg-transparent"/>
+      </div>
+      <button class="flex items-center gap-1.5 bg-white border border-outline-variant rounded-xl px-3 py-2.5 text-[13px] font-semibold">
+        <span class="material-symbols-outlined text-outline" style="font-size:18px">filter_list</span>Filter
+      </button>
+    </div>
+    <!-- Filter chips -->
+    <div class="flex gap-2 overflow-x-auto hide-scroll">
+      <button class="chip chip-neutral whitespace-nowrap bg-primary-container text-on-primary-container">All</button>
+      <button class="chip chip-neutral whitespace-nowrap">In Progress</button>
+      <button class="chip chip-neutral whitespace-nowrap">Completed</button>
+      <button class="chip chip-neutral whitespace-nowrap">Failed</button>
+      <button class="chip chip-neutral whitespace-nowrap">This Week</button>
+    </div>
+    <!-- List -->
+    <div class="space-y-2" id="inspections-list"></div>
+    <button onclick="nav('new-inspection')" class="btn-primary mt-4"><span class="material-symbols-outlined">add</span>START NEW INSPECTION</button>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────
+     SCREEN 3 · Reports
+───────────────────────────────────────────── -->
+<div id="screen-reports" class="screen">
+  <div class="hidden lg:flex items-center px-7 h-14 bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
+    <div class="text-[18px] font-bold">Reports</div>
+  </div>
+  <div class="p-4 lg:p-6 space-y-5">
+    <!-- Period selector -->
+    <div class="flex gap-2">
+      <button class="chip bg-primary-container text-on-primary-container">This Month</button>
+      <button class="chip chip-neutral">Last 90d</button>
+      <button class="chip chip-neutral">YTD</button>
+      <button class="chip chip-neutral">Custom</button>
+    </div>
+    <!-- Summary KPIs -->
+    <div class="grid grid-cols-3 gap-3">
+      <div class="card text-center"><div class="text-[22px] font-bold score-ok">94.2%</div><div class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wide mt-1">Avg Score</div></div>
+      <div class="card text-center"><div class="text-[22px] font-bold text-primary">47</div><div class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wide mt-1">Inspections</div></div>
+      <div class="card text-center"><div class="text-[22px] font-bold score-crit">12</div><div class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wide mt-1">Open Risks</div></div>
+    </div>
+    <!-- Trend -->
+    <div class="card">
+      <div class="text-[12px] font-bold uppercase tracking-wider text-on-surface-variant mb-4">Monthly Compliance Trend</div>
+      <div class="flex items-end justify-between gap-2 h-32">
+        <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t bg-secondary/30 hover:bg-secondary transition-colors" style="height:82%"></div><div class="text-[9px] font-bold text-outline">Jan</div></div>
+        <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t bg-secondary/30 hover:bg-secondary transition-colors" style="height:78%"></div><div class="text-[9px] font-bold text-outline">Feb</div></div>
+        <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t bg-secondary/30 hover:bg-secondary transition-colors" style="height:85%"></div><div class="text-[9px] font-bold text-outline">Mar</div></div>
+        <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t bg-secondary/30 hover:bg-secondary transition-colors" style="height:88%"></div><div class="text-[9px] font-bold text-outline">Apr</div></div>
+        <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t bg-secondary rounded-t" style="height:94%"></div><div class="text-[9px] font-bold text-outline">May</div></div>
+      </div>
+    </div>
+    <!-- Top at-risk -->
+    <div>
+      <div class="text-[15px] font-bold mb-3">At-Risk Locations</div>
+      <div class="space-y-2">
+        <div onclick="nav('location-detail',{id:1})" class="card flex items-center gap-4 cursor-pointer hover:border-outline">
+          <div class="text-[22px] font-bold score-crit w-14 flex-shrink-0">64%</div>
+          <div class="flex-1 min-w-0"><div class="text-[13px] font-bold">South Station Deli</div><div class="text-[11px] text-on-surface-variant">2 critical violations · Last audit 2d ago</div></div>
+          <span class="chip chip-error">FAIL</span>
+        </div>
+        <div onclick="nav('location-detail',{id:2})" class="card flex items-center gap-4 cursor-pointer hover:border-outline">
+          <div class="text-[22px] font-bold score-warn w-14 flex-shrink-0">72%</div>
+          <div class="flex-1 min-w-0"><div class="text-[13px] font-bold">Broadway Express</div><div class="text-[11px] text-on-surface-variant">1 critical violation · Last audit 5h ago</div></div>
+          <span class="chip chip-warn">WARN</span>
+        </div>
+        <div onclick="nav('location-detail',{id:4})" class="card flex items-center gap-4 cursor-pointer hover:border-outline">
+          <div class="text-[22px] font-bold score-ok w-14 flex-shrink-0">86%</div>
+          <div class="flex-1 min-w-0"><div class="text-[13px] font-bold">Harbor View Café</div><div class="text-[11px] text-on-surface-variant">0 critical · Last audit 1d ago</div></div>
+          <span class="chip chip-ok">PASS</span>
+        </div>
+      </div>
+    </div>
+    <button class="btn-outline"><span class="material-symbols-outlined">download</span>EXPORT PDF REPORT</button>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────
+     SCREEN 4 · Settings
+───────────────────────────────────────────── -->
+<div id="screen-settings" class="screen">
+  <div class="hidden lg:flex items-center px-7 h-14 bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
+    <div class="text-[18px] font-bold">Settings</div>
+  </div>
+  <div class="p-4 lg:p-6 space-y-4 max-w-lg">
+    <div class="card space-y-4">
+      <div class="text-[12px] font-bold uppercase tracking-wider text-on-surface-variant">Region</div>
+      <div class="flex items-center justify-between">
+        <div><div class="text-[14px] font-semibold">Active Region</div><div class="text-[12px] text-on-surface-variant">West Coast</div></div>
+        <button class="text-[13px] font-bold text-primary">Change</button>
+      </div>
+      <div class="flex items-center justify-between">
+        <div><div class="text-[14px] font-semibold">Time Zone</div><div class="text-[12px] text-on-surface-variant">America/Los_Angeles</div></div>
+        <button class="text-[13px] font-bold text-primary">Edit</button>
+      </div>
+    </div>
+    <div class="card space-y-4">
+      <div class="text-[12px] font-bold uppercase tracking-wider text-on-surface-variant">Notifications</div>
+      <div class="toggle-wrap justify-between"><div><div class="text-[14px] font-semibold">Critical Alerts</div><div class="text-[12px] text-on-surface-variant">Push + email for critical violations</div></div><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
+      <div class="toggle-wrap justify-between"><div><div class="text-[14px] font-semibold">Inspection Due Reminders</div><div class="text-[12px] text-on-surface-variant">24h before scheduled audit</div></div><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
+      <div class="toggle-wrap justify-between"><div><div class="text-[14px] font-semibold">Weekly Summary</div><div class="text-[12px] text-on-surface-variant">Monday morning digest</div></div><label class="toggle"><input type="checkbox"/><span class="toggle-slider"></span></label></div>
+    </div>
+    <div class="card space-y-4">
+      <div class="text-[12px] font-bold uppercase tracking-wider text-on-surface-variant">Inspection Defaults</div>
+      <div class="toggle-wrap justify-between"><div><div class="text-[14px] font-semibold">Require Photo Evidence</div><div class="text-[12px] text-on-surface-variant">Mandatory for critical items</div></div><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
+      <div class="toggle-wrap justify-between"><div><div class="text-[14px] font-semibold">Auto-save Notes</div><div class="text-[12px] text-on-surface-variant">Save drafts every 30s</div></div><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
+    </div>
+    <div class="card space-y-4">
+      <div class="text-[12px] font-bold uppercase tracking-wider text-on-surface-variant">App</div>
+      <div class="flex items-center justify-between"><div class="text-[14px] font-semibold">Version</div><div class="text-[13px] text-on-surface-variant">RMMInspector 2.4.1</div></div>
+      <div class="flex items-center justify-between"><div class="text-[14px] font-semibold">Data Sync</div><div class="text-[13px] text-secondary font-semibold">Up to date</div></div>
+    </div>
+    <button class="btn-outline text-error border-error"><span class="material-symbols-outlined">logout</span>SIGN OUT</button>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────
+     SCREEN 5 · New Inspection
+───────────────────────────────────────────── -->
+<div id="screen-new-inspection" class="screen">
+  <div class="hidden lg:flex items-center gap-3 px-7 h-14 bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
+    <button onclick="nav('inspections')" class="p-1 rounded-full hover:bg-surface-container-high"><span class="material-symbols-outlined">arrow_back</span></button>
+    <div class="text-[18px] font-bold">New Inspection</div>
+  </div>
+  <div class="p-4 lg:p-6 space-y-4 max-w-lg">
+    <div class="card space-y-4">
+      <div class="text-[13px] font-bold uppercase tracking-wider text-on-surface-variant">Location</div>
+      <select class="w-full border border-outline-variant rounded-xl px-4 py-3 text-[14px] bg-white focus:outline-none focus:border-primary font-medium">
+        <option value="">Select a location…</option>
+        <option>South Station Deli</option>
+        <option>Broadway Express</option>
+        <option>Grand Central Kitchen</option>
+        <option>Harbor View Café</option>
+        <option>Sunset Grille</option>
+        <option>The Market Table</option>
+      </select>
+    </div>
+    <div class="card space-y-4">
+      <div class="text-[13px] font-bold uppercase tracking-wider text-on-surface-variant">Inspection Type</div>
+      <div class="grid grid-cols-1 gap-2">
+        <label class="flex items-center gap-3 p-3 border-2 border-primary-container rounded-xl cursor-pointer bg-primary-container/10">
+          <input type="radio" name="itype" value="routine" checked class="accent-primary"/>
+          <div><div class="text-[14px] font-bold">Routine Audit</div><div class="text-[12px] text-on-surface-variant">Standard full inspection — all categories</div></div>
+        </label>
+        <label class="flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer">
+          <input type="radio" name="itype" value="followup" class="accent-primary"/>
+          <div><div class="text-[14px] font-bold">Follow-Up</div><div class="text-[12px] text-on-surface-variant">Verify remediation of previous violations</div></div>
+        </label>
+        <label class="flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer">
+          <input type="radio" name="itype" value="special" class="accent-primary"/>
+          <div><div class="text-[14px] font-bold">Special / Incident</div><div class="text-[12px] text-on-surface-variant">Triggered by complaint or incident report</div></div>
+        </label>
+      </div>
+    </div>
+    <div class="card space-y-4">
+      <div class="text-[13px] font-bold uppercase tracking-wider text-on-surface-variant">Inspector</div>
+      <select class="w-full border border-outline-variant rounded-xl px-4 py-3 text-[14px] bg-white focus:outline-none focus:border-primary font-medium">
+        <option>Mike Rodriguez (You)</option>
+        <option>Sarah Chen</option>
+        <option>James Park</option>
+        <option>Lisa Torres</option>
+      </select>
+    </div>
+    <div class="card space-y-4">
+      <div class="text-[13px] font-bold uppercase tracking-wider text-on-surface-variant">Scheduled Date</div>
+      <input type="date" value="2026-05-18" class="w-full border border-outline-variant rounded-xl px-4 py-3 text-[14px] bg-white focus:outline-none focus:border-primary font-medium"/>
+    </div>
+    <button onclick="nav('active-inspection')" class="btn-primary py-4 text-[14px]"><span class="material-symbols-outlined">play_arrow</span>START INSPECTION</button>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────
+     SCREEN 6 · Active Inspection
+───────────────────────────────────────────── -->
+<div id="screen-active-inspection" class="screen">
+  <div class="hidden lg:flex items-center gap-3 px-7 h-14 bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
+    <button onclick="nav('inspections')" class="p-1 rounded-full hover:bg-surface-container-high"><span class="material-symbols-outlined">arrow_back</span></button>
+    <div><div class="text-[18px] font-bold">Active Inspection</div><div class="text-[12px] text-on-surface-variant">Grand Central Kitchen · Routine Audit</div></div>
+  </div>
+  <div class="p-4 lg:p-6 space-y-5">
+    <!-- Progress Hero -->
+    <div class="card bg-primary-container text-on-primary-container flex items-center gap-6">
+      <div class="flex-shrink-0">
+        <svg width="80" height="80" viewBox="0 0 80 80" class="ring-svg">
+          <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="8"/>
+          <circle cx="40" cy="40" r="32" fill="none" stroke="#4ae176" stroke-width="8" stroke-dasharray="201" stroke-dashoffset="80" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="text-[28px] font-bold">60%</div>
+        <div class="text-[13px] opacity-80">3 of 5 sections complete</div>
+        <div class="text-[11px] opacity-60 mt-1">Grand Central Kitchen</div>
+      </div>
+      <div class="ml-auto text-right">
+        <div class="text-[12px] opacity-70">Started</div>
+        <div class="text-[13px] font-bold">9:14 AM</div>
+        <div class="text-[12px] opacity-70 mt-1">Duration</div>
+        <div class="text-[13px] font-bold">42 min</div>
+      </div>
+    </div>
+    <!-- Sections -->
+    <div class="text-[15px] font-bold mb-2">Inspection Sections</div>
+    <div class="space-y-2" id="sections-list"></div>
+    <!-- Pause/Finish -->
+    <div class="flex gap-3">
+      <button class="btn-outline flex-1"><span class="material-symbols-outlined">pause</span>PAUSE</button>
+      <button onclick="nav('completed-inspection')" class="btn-primary flex-1"><span class="material-symbols-outlined">check_circle</span>FINISH</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────
+     SCREEN 7 · Inspection Section
+───────────────────────────────────────────── -->
+<div id="screen-inspection-section" class="screen">
+  <div class="hidden lg:flex items-center gap-3 px-7 h-14 bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
+    <button onclick="nav('active-inspection')" class="p-1 rounded-full hover:bg-surface-container-high"><span class="material-symbols-outlined">arrow_back</span></button>
+    <div><div class="text-[18px] font-bold" id="section-title-desktop">Food Storage</div><div class="text-[12px] text-on-surface-variant">Grand Central Kitchen</div></div>
+    <div class="ml-auto"><span class="chip chip-warn">4/7 items</span></div>
+  </div>
+  <div class="p-4 lg:p-6 space-y-4">
+    <div class="flex items-center justify-between">
+      <div><div class="text-[16px] font-bold" id="section-title-mobile">Food Storage</div><div class="text-[12px] text-on-surface-variant">Grand Central Kitchen</div></div>
+      <span class="chip chip-warn">4/7 complete</span>
+    </div>
+    <div class="h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-secondary rounded-full" style="width:57%"></div></div>
+    <div class="space-y-2" id="section-items-list"></div>
+    <button onclick="nav('active-inspection')" class="btn-primary"><span class="material-symbols-outlined">check</span>SAVE SECTION</button>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────
+     SCREEN 8 · Inspection Item Detail
+───────────────────────────────────────────── -->
+<div id="screen-item-detail" class="screen">
+  <div class="hidden lg:flex items-center gap-3 px-7 h-14 bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
+    <button onclick="nav('inspection-section')" class="p-1 rounded-full hover:bg-surface-container-high"><span class="material-symbols-outlined">arrow_back</span></button>
+    <div class="text-[18px] font-bold">Item Detail</div>
+  </div>
+  <div class="p-4 lg:p-6 space-y-4 max-w-lg">
+    <div class="card">
+      <div class="chip chip-error mb-3">CRITICAL</div>
+      <div class="text-[16px] font-bold mb-1">Proper Cold Storage Temperatures</div>
+      <div class="text-[13px] text-on-surface-variant leading-relaxed">All refrigerated food must be stored at 41°F (5°C) or below. Frozen items must be at 0°F (-18°C) or below. Check thermometer calibration and placement.</div>
+    </div>
+    <!-- Pass / Fail -->
+    <div class="card">
+      <div class="text-[12px] font-bold uppercase tracking-wider text-on-surface-variant mb-4">Compliance Status</div>
+      <div class="grid grid-cols-2 gap-3">
+        <button id="btn-pass" onclick="setPassFail('pass')" class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-secondary bg-secondary/10 transition-all">
+          <span class="material-symbols-outlined text-secondary" style="font-size:32px">check_circle</span>
+          <span class="text-[14px] font-bold text-secondary">PASS</span>
+        </button>
+        <button id="btn-fail" onclick="setPassFail('fail')" class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-outline-variant transition-all hover:border-error">
+          <span class="material-symbols-outlined text-outline" style="font-size:32px">cancel</span>
+          <span class="text-[14px] font-bold text-on-surface-variant">FAIL</span>
+        </button>
+      </div>
+    </div>
+    <!-- Notes -->
+    <div class="card space-y-3">
+      <div class="text-[12px] font-bold uppercase tracking-wider text-on-surface-variant">Inspector Notes</div>
+      <textarea rows="3" placeholder="Add notes about this item…" class="w-full border border-outline-variant rounded-xl p-3 text-[14px] bg-white focus:outline-none focus:border-primary resize-none"></textarea>
+    </div>
+    <!-- Evidence -->
+    <div class="card space-y-3">
+      <div class="text-[12px] font-bold uppercase tracking-wider text-on-surface-variant">Evidence</div>
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="nav('photo-capture')" class="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-outline-variant rounded-xl hover:border-primary transition-colors">
+          <span class="material-symbols-outlined text-outline" style="font-size:28px">photo_camera</span>
+          <span class="text-[12px] font-semibold text-on-surface-variant">Add Photo</span>
+        </button>
+        <button onclick="nav('voice-notes')" class="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-outline-variant rounded-xl hover:border-primary transition-colors">
+          <span class="material-symbols-outlined text-outline" style="font-size:28px">mic</span>
+          <span class="text-[12px] font-semibold text-on-surface-variant">Voice Note</span>
+        </button>
+      </div>
+    </div>
+    <button onclick="nav('inspection-section')" class="btn-primary"><span class="material-symbols-outlined">save</span>SAVE ITEM</button>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────
+     SCREEN 9 · Completed Inspection
+───────────────────────────────────────────── -->
+<div id="screen-completed-inspection" class="screen">
+  <div class="hidden lg:flex items-center gap-3 px-7 h-14 bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
+    <button onclick="nav('inspections')" class="p-1 rounded-full hover:bg-surface-container-high"><span class="material-symbols-outlined">arrow_back</span></button>
+    <div class="text-[18px] font-bold">Inspection Report</div>
+  </div>
+  <div class="p-4 lg:p-6 space-y-5 max-w-xl">
+    <!-- Score hero -->
+    <div class="card bg-secondary text-on-secondary text-center py-8">
+      <div class="text-[64px] font-bold leading-none">92</div>
+      <div class="text-[16px] font-bold mt-1">PASS</div>
+      <div class="text-[13px] opacity-80 mt-2">Grand Central Kitchen · Routine Audit</div>
+      <div class="text-[12px] opacity-70 mt-1">May 18, 2026 · Mike Rodriguez</div>
+    </div>
+    <!-- Section scores -->
+    <div class="card space-y-3">
+      <div class="text-[12px] font-bold uppercase tracking-wider text-on-surface-variant mb-2">Section Scores</div>
+      <div class="flex justify-between items-center"><span class="text-[14px]">Food Storage</span><span class="text-[14px] font-bold score-ok">100%</span></div>
+      <div class="flex justify-between items-center"><span class="text-[14px]">Personal Hygiene</span><span class="text-[14px] font-bold score-ok">95%</span></div>
+      <div class="flex justify-between items-center"><span class="text-[14px]">Equipment Sanitation</span><span class="text-[14px] font-bold score-warn">80%</span></div>
+      <div class="flex justify-between items-center"><span class="text-[14px]">Pest Control</span><span class="text-[14px] font-bold score-ok">100%</span></div>
+      <div class="flex justify-between items-center"><span class="text-[14px]">Documentation</span><span class="text-[14px] font-bold score-ok">90%</span></div>
+    </div>
+    <!-- Violations found -->
+    <div>
+      <div class="text-[15px] font-bold mb-3">Violations Found (2)</div>
+      <div class="space-y-2">
+        <div onclick="nav('violation-detail',{id:4})" class="card flex items-start gap-3 cursor-pointer hover:border-outline">
+          <span class="chip chip-warn mt-0.5">MEDIUM</span>
+          <div><div class="text-[13px] font-bold">Sanitizer concentration below standard</div><div class="text-[12px] text-on-surface-variant mt-0.5">Equipment Sanitation · Item #3</div></div>
+        </div>
+        <div onclick="nav('violation-detail',{id:5})" class="card flex items-start gap-3 cursor-pointer hover:border-outline">
+          <span class="chip chip-warn">MEDIUM</span>
+          <div><div class="text-[13px] font-bold">Incomplete temperature log — 3 entries missing</div><div class="text-[12px] text-on-surface-variant mt-0.5">Documentation · Item #2</div></div>
+        </div>
+      </div>
+    </div>
+    <!-- Signature -->
+    <div class="card space-y-3">
+      <div class="text-[12px] font-bold uppercase tracking-wider text-on-surface-variant">Inspector Sign-off</div>
+      <div class="h-20 border-2 border-dashed border-outline-variant rounded-xl flex items-center justify-center text-[13px] text-on-surface-variant">Tap to sign</div>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="nav('inspections')" class="btn-primary flex-1"><span class="material-symbols-outlined">check_circle</span>SUBMIT REPORT</button>
+      <button class="btn-outline flex-1"><span class="material-symbols-outlined">download</span>PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────
+     SCREEN 10 · Locations List
+───────────────────────────────────────────── -->
+<div id="screen-locations" class="screen">
+  <div class="hidden lg:flex items-center justify-between px-7 h-14 bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
+    <div class="text-[18px] font-bold">Locations</div>
+    <button class="flex items-center gap-2 bg-primary-container text-on-primary-container px-4 py-2 rounded-xl text-[13px] font-bold hover:opacity-80"><span class="material-symbols-outlined" style="font-size:18px">add</span>Add Location</button>
+  </div>
+  <div class="p-4 lg:p-6 space-y-4">
+    <div class="flex items-center gap-2 bg-white border border-outline-variant rounded-xl px-3 py-2.5">
+      <span class="material-symbols-outlined text-outline" style="font-size:20px">search</span>
+      <input type="text" placeholder="Search locations…" class="flex-1 border-none outline-none text-[14px] bg-transparent"/>
+    </div>
+    <div class="space-y-2" id="locations-list"></div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────
+     SCREEN 11 · Location Detail
+───────────────────────────────────────────── -->
+<div id="screen-location-detail" class="screen">
+  <div class="hidden lg:flex items-center gap-3 px-7 h-14 bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
+    <button onclick="nav('locations')" class="p-1 rounded-full hover:bg-surface-container-high"><span class="material-symbols-outlined">arrow_back</span></button>
+    <div><div class="text-[18px] font-bold" id="loc-title-desktop">Location Detail</div><div class="text-[12px] text-on-surface-variant">West Coast Region</div></div>
+  </div>
+  <div class="p-4 lg:p-6 space-y-5" id="location-detail-content">
+    <!-- Filled by JS -->
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────
+     SCREEN 12 · Critical Alerts
+───────────────────────────────────────────── -->
+<div id="screen-alerts" class="screen">
+  <div class="hidden lg:flex items-center px-7 h-14 bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
+    <div class="text-[18px] font-bold">Critical Alerts</div>
+  </div>
+  <div class="p-4 lg:p-6 space-y-4">
+    <div class="flex gap-2">
+      <button class="chip bg-primary-container text-on-primary-container">All (7)</button>
+      <button class="chip chip-error">Active (3)</button>
+      <button class="chip chip-neutral">Resolved (4)</button>
+    </div>
+    <div class="space-y-3" id="alerts-list"></div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────
+     SCREEN 13 · Violation Detail
+───────────────────────────────────────────── -->
+<div id="screen-violation-detail" class="screen">
+  <div class="hidden lg:flex items-center gap-3 px-7 h-14 bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
+    <button onclick="history.back()||nav('alerts')" onclick="nav('alerts')" class="p-1 rounded-full hover:bg-surface-container-high"><span class="material-symbols-outlined">arrow_back</span></button>
+    <div class="text-[18px] font-bold">Violation Detail</div>
+  </div>
+  <div class="p-4 lg:p-6 space-y-4 max-w-lg" id="violation-detail-content">
+    <!-- Filled by JS -->
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────
+     SCREEN 14 · Photo Capture
+───────────────────────────────────────────── -->
+<div id="screen-photo-capture" class="screen">
+  <div class="hidden lg:flex items-center gap-3 px-7 h-14 bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
+    <button onclick="nav('item-detail')" class="p-1 rounded-full hover:bg-surface-container-high"><span class="material-symbols-outlined">arrow_back</span></button>
+    <div class="text-[18px] font-bold">Photo Evidence</div>
+  </div>
+  <div class="p-4 lg:p-6 space-y-4 max-w-lg">
+    <!-- Viewfinder -->
+    <div class="bg-inverse-surface rounded-2xl aspect-[4/3] flex flex-col items-center justify-center gap-3">
+      <span class="material-symbols-outlined text-inverse-on-surface" style="font-size:56px">photo_camera</span>
+      <div class="text-inverse-on-surface text-[14px] opacity-70">Camera preview</div>
+    </div>
+    <div class="flex gap-3">
+      <button class="btn-primary flex-1 py-4"><span class="material-symbols-outlined">camera</span>CAPTURE</button>
+      <button class="btn-outline flex-1 py-4"><span class="material-symbols-outlined">upload</span>UPLOAD</button>
+    </div>
+    <!-- Recent photos -->
+    <div class="text-[14px] font-bold">Recent Photos (3)</div>
+    <div class="grid grid-cols-3 gap-2">
+      <div class="aspect-square bg-surface-container rounded-xl flex items-center justify-center"><span class="material-symbols-outlined text-outline">image</span></div>
+      <div class="aspect-square bg-surface-container rounded-xl flex items-center justify-center"><span class="material-symbols-outlined text-outline">image</span></div>
+      <div class="aspect-square bg-surface-container-high rounded-xl flex items-center justify-center"><span class="material-symbols-outlined text-outline">image</span></div>
+    </div>
+    <button onclick="nav('item-detail')" class="btn-outline"><span class="material-symbols-outlined">check</span>DONE</button>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────
+     SCREEN 15 · Voice Notes
+───────────────────────────────────────────── -->
+<div id="screen-voice-notes" class="screen">
+  <div class="hidden lg:flex items-center gap-3 px-7 h-14 bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
+    <button onclick="nav('item-detail')" class="p-1 rounded-full hover:bg-surface-container-high"><span class="material-symbols-outlined">arrow_back</span></button>
+    <div class="text-[18px] font-bold">Voice Notes</div>
+  </div>
+  <div class="p-4 lg:p-6 space-y-6 max-w-lg">
+    <!-- Record button -->
+    <div class="flex flex-col items-center gap-4 py-6">
+      <button id="record-btn" onclick="toggleRecord()" class="w-24 h-24 rounded-full bg-primary-container flex items-center justify-center hover:opacity-80 transition-all">
+        <span class="material-symbols-outlined text-on-primary-container" style="font-size:40px">mic</span>
+      </button>
+      <div id="record-status" class="text-[14px] font-bold text-on-surface-variant">Tap to record</div>
+      <!-- Waveform -->
+      <div class="flex items-center gap-1 h-10">
+        <div id="wave" class="flex items-center gap-0.5"></div>
+      </div>
+    </div>
+    <!-- Recordings -->
+    <div class="text-[14px] font-bold">Saved Recordings</div>
+    <div class="space-y-2">
+      <div class="card flex items-center gap-3">
+        <button class="w-10 h-10 rounded-full bg-primary-container flex-shrink-0 flex items-center justify-center"><span class="material-symbols-outlined text-on-primary-container" style="font-size:20px">play_arrow</span></button>
+        <div class="flex-1 min-w-0"><div class="text-[13px] font-bold">Note #1</div><div class="text-[11px] text-on-surface-variant">0:14 · Today 9:22 AM</div></div>
+        <button class="p-2"><span class="material-symbols-outlined text-error" style="font-size:18px">delete</span></button>
+      </div>
+      <div class="card flex items-center gap-3">
+        <button class="w-10 h-10 rounded-full bg-primary-container flex-shrink-0 flex items-center justify-center"><span class="material-symbols-outlined text-on-primary-container" style="font-size:20px">play_arrow</span></button>
+        <div class="flex-1 min-w-0"><div class="text-[13px] font-bold">Note #2 — Temp reading</div><div class="text-[11px] text-on-surface-variant">0:28 · Today 9:30 AM</div></div>
+        <button class="p-2"><span class="material-symbols-outlined text-error" style="font-size:18px">delete</span></button>
+      </div>
+    </div>
+    <button onclick="nav('item-detail')" class="btn-primary"><span class="material-symbols-outlined">check</span>DONE</button>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────
+     SCREEN 16 · User Profile
+───────────────────────────────────────────── -->
+<div id="screen-profile" class="screen">
+  <div class="hidden lg:flex items-center px-7 h-14 bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
+    <div class="text-[18px] font-bold">Profile</div>
+  </div>
+  <div class="p-4 lg:p-6 space-y-4 max-w-lg">
+    <div class="card flex items-center gap-4">
+      <div class="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center text-[22px] font-bold text-on-primary-container flex-shrink-0">MR</div>
+      <div>
+        <div class="text-[18px] font-bold">Mike Rodriguez</div>
+        <div class="text-[13px] text-on-surface-variant">Senior Inspector</div>
+        <span class="chip bg-secondary/20 text-secondary mt-1">West Coast Region</span>
+      </div>
+    </div>
+    <div class="card space-y-3">
+      <div class="text-[12px] font-bold uppercase tracking-wider text-on-surface-variant">Assigned Locations (5)</div>
+      <div class="space-y-2">
+        <div class="flex justify-between items-center"><span class="text-[14px]">South Station Deli</span><span class="chip chip-error">CRITICAL</span></div>
+        <div class="flex justify-between items-center"><span class="text-[14px]">Broadway Express</span><span class="chip chip-warn">WARNING</span></div>
+        <div class="flex justify-between items-center"><span class="text-[14px]">Grand Central Kitchen</span><span class="chip chip-ok">PASS</span></div>
+        <div class="flex justify-between items-center"><span class="text-[14px]">Harbor View Café</span><span class="chip chip-ok">PASS</span></div>
+        <div class="flex justify-between items-center"><span class="text-[14px]">Sunset Grille</span><span class="chip chip-ok">PASS</span></div>
+      </div>
+    </div>
+    <div class="card space-y-3">
+      <div class="text-[12px] font-bold uppercase tracking-wider text-on-surface-variant">Activity This Month</div>
+      <div class="grid grid-cols-3 gap-3 text-center">
+        <div><div class="text-[22px] font-bold text-primary">14</div><div class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wide">Inspections</div></div>
+        <div><div class="text-[22px] font-bold score-crit">3</div><div class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wide">Failed</div></div>
+        <div><div class="text-[22px] font-bold score-ok">94%</div><div class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wide">Avg Score</div></div>
+      </div>
+    </div>
+    <div class="card space-y-2">
+      <div class="text-[12px] font-bold uppercase tracking-wider text-on-surface-variant">Contact</div>
+      <div class="flex justify-between text-[14px]"><span class="text-on-surface-variant">Email</span><span class="font-medium">mike.r@rrmco.com</span></div>
+      <div class="flex justify-between text-[14px]"><span class="text-on-surface-variant">Phone</span><span class="font-medium">(415) 555-0142</span></div>
+      <div class="flex justify-between text-[14px]"><span class="text-on-surface-variant">License #</span><span class="font-medium">CA-FSI-48821</span></div>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="nav('settings')" class="btn-outline flex-1"><span class="material-symbols-outlined">settings</span>SETTINGS</button>
+      <button class="btn-outline flex-1 text-error border-error"><span class="material-symbols-outlined">logout</span>SIGN OUT</button>
+    </div>
+  </div>
+</div>
+
+</main><!-- end main-content -->
+
+<!-- ═══════════════════════════════════════════════
+     MOBILE BOTTOM NAV
+═══════════════════════════════════════════════ -->
+<nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-outline-variant flex items-center justify-around px-2 py-1 safe-bottom">
+  <button onclick="nav('dashboard')" class="mob-nav flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition-colors" data-nav="dashboard">
+    <span class="material-symbols-outlined">dashboard</span>
+    <span class="text-[10px] font-semibold">Home</span>
+  </button>
+  <button onclick="nav('inspections')" class="mob-nav flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition-colors" data-nav="inspections">
+    <span class="material-symbols-outlined">assignment</span>
+    <span class="text-[10px] font-semibold">Inspections</span>
+  </button>
+  <button onclick="nav('new-inspection')" class="mob-nav flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition-colors" data-nav="new-inspection">
+    <span class="material-symbols-outlined">add_circle</span>
+    <span class="text-[10px] font-semibold">New</span>
+  </button>
+  <button onclick="nav('reports')" class="mob-nav flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition-colors" data-nav="reports">
+    <span class="material-symbols-outlined">bar_chart</span>
+    <span class="text-[10px] font-semibold">Reports</span>
+  </button>
+  <button onclick="nav('settings')" class="mob-nav flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition-colors" data-nav="settings">
+    <span class="material-symbols-outlined">settings</span>
+    <span class="text-[10px] font-semibold">Settings</span>
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════════════════════
+     DATA + NAVIGATION JS
+═══════════════════════════════════════════════ -->
+<script>
+// ── DATA ────────────────────────────────────────
+const LOCATIONS = [
+  {id:1,name:"South Station Deli",region:"West Coast",score:64,lastAudit:"2d ago",criticals:2,status:"critical",address:"142 South Station Blvd, San Francisco CA"},
+  {id:2,name:"Broadway Express",region:"West Coast",score:72,lastAudit:"5h ago",criticals:1,status:"warning",address:"88 Broadway Ave, San Francisco CA"},
+  {id:3,name:"Grand Central Kitchen",region:"West Coast",score:98,lastAudit:"12h ago",criticals:0,status:"good",address:"1 Grand Central Plaza, Oakland CA"},
+  {id:4,name:"Harbor View Café",region:"West Coast",score:86,lastAudit:"1d ago",criticals:0,status:"ok",address:"500 Harbor Dr, San Jose CA"},
+  {id:5,name:"Sunset Grille",region:"West Coast",score:91,lastAudit:"3d ago",criticals:0,status:"ok",address:"2200 Sunset Blvd, Los Angeles CA"},
+  {id:6,name:"The Market Table",region:"West Coast",score:79,lastAudit:"5d ago",criticals:0,status:"ok",address:"600 Market St, Portland OR"},
+];
+
+const INSPECTIONS = [
+  {id:1,location:"South Station Deli",inspector:"Mike Rodriguez",date:"May 16, 2026",score:64,status:"failed",type:"Routine"},
+  {id:2,location:"Grand Central Kitchen",inspector:"Sarah Chen",date:"May 18, 2026",score:98,status:"passed",type:"Routine"},
+  {id:3,location:"Broadway Express",inspector:"Mike Rodriguez",date:"May 17, 2026",score:72,status:"passed",type:"Follow-Up"},
+  {id:4,location:"Harbor View Café",inspector:"James Park",date:"May 17, 2026",score:86,status:"passed",type:"Routine"},
+  {id:5,location:"Sunset Grille",inspector:"Lisa Torres",date:"May 15, 2026",score:91,status:"passed",type:"Routine"},
+  {id:6,location:"The Market Table",inspector:"Mike Rodriguez",date:"May 13, 2026",score:79,status:"passed",type:"Routine"},
+  {id:7,location:"South Station Deli",inspector:"Mike Rodriguez",date:"May 2, 2026",score:58,status:"failed",type:"Routine"},
+];
+
+const SECTIONS = [
+  {id:1,name:"Food Storage",icon:"kitchen",items:7,done:4,score:null,status:"in-progress"},
+  {id:2,name:"Personal Hygiene",icon:"soap",items:6,done:6,score:95,status:"complete"},
+  {id:3,name:"Equipment Sanitation",icon:"cleaning_services",items:8,done:8,score:80,status:"complete"},
+  {id:4,name:"Pest Control",icon:"pest_control",items:4,done:0,score:null,status:"pending"},
+  {id:5,name:"Documentation",icon:"description",items:5,done:0,score:null,status:"pending"},
+];
+
+const SECTION_ITEMS = [
+  {id:1,label:"Proper cold storage temperatures (≤41°F)",critical:true,status:"pass"},
+  {id:2,label:"Raw meats stored below ready-to-eat foods",critical:true,status:"pass"},
+  {id:3,label:"All containers labeled and dated",critical:false,status:"fail"},
+  {id:4,label:"FIFO rotation in place",critical:false,status:"pass"},
+  {id:5,label:"No expired products on shelf",critical:true,status:null},
+  {id:6,label:"Walk-in cooler door seals intact",critical:false,status:null},
+  {id:7,label:"Temperature logs up to date",critical:false,status:null},
+];
+
+const ALERTS = [
+  {id:1,severity:"critical",title:"Failed Inspection: Savory Bistro",desc:"Overall score 58% — Immediate attention required",location:"South Station Deli",time:"12m ago",resolved:false},
+  {id:2,severity:"critical",title:"Temp Alert #402 — Main Walk-in",desc:"Temperature reading 48°F; threshold is 40°F",location:"Broadway Express",time:"34m ago",resolved:false},
+  {id:3,severity:"critical",title:"Overdue Deep Clean — North End Unit",desc:"Scheduled sanitization 4 days past due",location:"South Station Deli",time:"4d ago",resolved:false},
+  {id:4,severity:"medium",title:"Incomplete Temperature Log",desc:"3 entries missing from weekly log",location:"Grand Central Kitchen",time:"2d ago",resolved:true},
+  {id:5,severity:"medium",title:"Sanitizer Concentration Low",desc:"Measured at 150ppm; min standard is 200ppm",location:"Harbor View Café",time:"3d ago",resolved:true},
+  {id:6,severity:"medium",title:"Pest Trap Not Replaced",desc:"Monthly replacement overdue by 8 days",location:"Sunset Grille",time:"1d ago",resolved:false},
+  {id:7,severity:"low",title:"Handwashing Log Incomplete",desc:"2 missing signatures from evening shift",location:"Broadway Express",time:"5d ago",resolved:true},
+];
+
+const VIOLATIONS = {
+  1:{title:"Failed Inspection: Savory Bistro",severity:"critical",location:"South Station Deli",date:"May 18, 2026",inspector:"Mike Rodriguez",desc:"Overall inspection score of 58% — below the 70% passing threshold. Multiple food storage and hygiene violations found.",remediation:"Schedule immediate follow-up. All critical items must be resolved within 48 hours.",status:"open"},
+  2:{title:"Walk-in Temperature Violation #402",severity:"critical",location:"Broadway Express",date:"May 18, 2026",inspector:"Sarah Chen",desc:"Walk-in cooler reading 48°F. FDA standard requires ≤41°F for all refrigerated foods. Potential spoilage risk to perishables stored overnight.",remediation:"Service refrigeration unit immediately. Discard any food held >4h above temp. Verify repair before reopening cold storage.",status:"open"},
+  3:{title:"Sanitation Overdue — North End",severity:"medium",location:"South Station Deli",date:"May 14, 2026",inspector:"Mike Rodriguez",desc:"Deep clean of prep surfaces and hood units is 4 days past scheduled date. Grease accumulation noted on exhaust hoods.",remediation:"Schedule and complete deep clean within 24 hours. Document with photo evidence.",status:"open"},
+  4:{title:"Sanitizer Concentration Below Standard",severity:"medium",location:"Grand Central Kitchen",date:"May 18, 2026",inspector:"Mike Rodriguez",desc:"Active sanitizer solution measured at 150ppm chlorine. Minimum required concentration is 200ppm for food contact surfaces.",remediation:"Prepare fresh sanitizer solution and retest before continuing food prep.",status:"pending"},
+  5:{title:"Incomplete Temperature Log",severity:"low",location:"Grand Central Kitchen",date:"May 18, 2026",inspector:"Mike Rodriguez",desc:"Weekly temperature log missing 3 entries from Tuesday and Wednesday AM checks.",remediation:"Complete missing entries if data available from automated sensors. Update logging procedure with staff.",status:"pending"},
+};
+
+// ── NAVIGATION ──────────────────────────────────
+let currentScreen = 'dashboard';
+let navHistory = ['dashboard'];
+
+function nav(screenId, ctx = {}) {
+  // Hide all screens
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  // Show target
+  const el = document.getElementById('screen-' + screenId);
+  if (!el) return;
+  el.classList.add('active');
+  currentScreen = screenId;
+  navHistory.push(screenId);
+
+  // Update desktop nav active state
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-nav'));
+  const topLevel = {
+    'dashboard':'dashboard','alerts':'alerts','locations':'locations',
+    'inspections':'inspections','new-inspection':'new-inspection',
+    'reports':'reports','profile':'profile','settings':'settings'
+  };
+  const navKey = topLevel[screenId];
+  if (navKey) {
+    document.querySelectorAll('.nav-item').forEach(n => {
+      if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'"+navKey+"'")) n.classList.add('active-nav');
+    });
+  }
+
+  // Update mobile bottom nav
+  document.querySelectorAll('.mob-nav').forEach(b => {
+    b.classList.remove('bg-primary-container','text-on-primary-container');
+    b.classList.add('text-on-surface-variant');
+  });
+  document.querySelectorAll('.mob-nav').forEach(b => {
+    if (b.dataset.nav === screenId) {
+      b.classList.add('bg-primary-container','text-on-primary-container');
+      b.classList.remove('text-on-surface-variant');
+    }
+  });
+
+  // Mobile header title
+  const titles = {
+    'dashboard':'West Coast Region','inspections':'All Inspections',
+    'reports':'Reports','settings':'Settings','new-inspection':'New Inspection',
+    'active-inspection':'Active Inspection','inspection-section':'Food Storage',
+    'item-detail':'Item Detail','completed-inspection':'Inspection Report',
+    'locations':'Locations','location-detail':'Location Detail',
+    'alerts':'Critical Alerts','violation-detail':'Violation Detail',
+    'photo-capture':'Photo Evidence','voice-notes':'Voice Notes','profile':'Profile'
+  };
+  const regions = {
+    'dashboard':'REGION','inspections':'INSPECTIONS','reports':'ANALYTICS',
+    'settings':'ACCOUNT','locations':'LOCATIONS','alerts':'ALERTS','profile':'ACCOUNT'
+  };
+  document.getElementById('header-title').textContent = titles[screenId] || screenId;
+  document.getElementById('header-region').textContent = regions[screenId] || 'RMMInspector';
+
+  // Screen-specific rendering
+  if (screenId === 'inspections') renderInspections();
+  if (screenId === 'active-inspection') renderSections();
+  if (screenId === 'inspection-section') renderSectionItems();
+  if (screenId === 'locations') renderLocations();
+  if (screenId === 'location-detail') renderLocationDetail(ctx.id || 1);
+  if (screenId === 'alerts') renderAlerts();
+  if (screenId === 'violation-detail') renderViolationDetail(ctx.id || 1);
+
+  window.scrollTo(0, 0);
+}
+
+// ── RENDERERS ───────────────────────────────────
+function renderInspections() {
+  const el = document.getElementById('inspections-list');
+  el.innerHTML = INSPECTIONS.map(i => {
+    const sc = i.status === 'failed' ? 'score-crit' : 'score-ok';
+    const chip = i.status === 'failed' ? 'chip-error' : 'chip-ok';
+    const label = i.status === 'failed' ? 'FAIL' : 'PASS';
+    const dest = i.status === 'failed' ? 'completed-inspection' : 'completed-inspection';
+    return `<div onclick="nav('${dest}')" class="card flex items-center gap-4 cursor-pointer hover:border-outline transition-colors">
+      <div class="text-[22px] font-bold ${sc} w-14 flex-shrink-0 text-center">${i.score}%</div>
+      <div class="flex-1 min-w-0">
+        <div class="text-[14px] font-bold truncate">${i.location}</div>
+        <div class="text-[12px] text-on-surface-variant">${i.type} · ${i.date}</div>
+        <div class="text-[11px] text-on-surface-variant mt-0.5">${i.inspector}</div>
+      </div>
+      <span class="chip ${chip}">${label}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderSections() {
+  const el = document.getElementById('sections-list');
+  el.innerHTML = SECTIONS.map(s => {
+    const statusIcon = s.status === 'complete' ? 'check_circle' : s.status === 'in-progress' ? 'pending' : 'radio_button_unchecked';
+    const statusColor = s.status === 'complete' ? 'text-secondary' : s.status === 'in-progress' ? 'text-primary-container' : 'text-outline';
+    const scoreText = s.score !== null ? `<span class="chip chip-ok">${s.score}%</span>` : s.status === 'in-progress' ? `<span class="chip chip-warn">${s.done}/${s.items}</span>` : `<span class="chip chip-neutral">${s.items} items</span>`;
+    return `<div onclick="nav('inspection-section')" class="card flex items-center gap-4 cursor-pointer hover:border-outline transition-colors">
+      <span class="material-symbols-outlined ${statusColor} flex-shrink-0">${statusIcon}</span>
+      <div class="flex-1 min-w-0"><div class="text-[14px] font-bold">${s.name}</div><div class="text-[12px] text-on-surface-variant">${s.items} items</div></div>
+      ${scoreText}
+      <span class="material-symbols-outlined text-outline" style="font-size:18px">chevron_right</span>
+    </div>`;
+  }).join('');
+}
+
+function renderSectionItems() {
+  const el = document.getElementById('section-items-list');
+  el.innerHTML = SECTION_ITEMS.map(item => {
+    const passActive = item.status === 'pass' ? 'border-secondary bg-secondary/10' : 'border-outline-variant';
+    const failActive = item.status === 'fail' ? 'border-error bg-error/10' : 'border-outline-variant';
+    const critBadge = item.critical ? `<span class="chip chip-error" style="font-size:10px">CRITICAL</span>` : '';
+    return `<div onclick="nav('item-detail')" class="card cursor-pointer hover:border-outline transition-colors">
+      <div class="flex items-start justify-between gap-3 mb-3">
+        <div class="flex-1 min-w-0"><div class="text-[13px] font-semibold leading-tight">${item.label}</div>${critBadge ? `<div class="mt-1">${critBadge}</div>` : ''}</div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="event.stopPropagation()" class="flex items-center justify-center gap-2 py-2 rounded-xl border-2 ${passActive} transition-all text-[12px] font-bold text-secondary">
+          <span class="material-symbols-outlined" style="font-size:18px">check_circle</span>PASS
+        </button>
+        <button onclick="event.stopPropagation()" class="flex items-center justify-center gap-2 py-2 rounded-xl border-2 ${failActive} transition-all text-[12px] font-bold text-error">
+          <span class="material-symbols-outlined" style="font-size:18px">cancel</span>FAIL
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderLocations() {
+  const el = document.getElementById('locations-list');
+  el.innerHTML = LOCATIONS.map(loc => {
+    const sc = loc.score < 70 ? 'score-crit' : loc.score < 85 ? 'score-warn' : 'score-ok';
+    const chip = loc.criticals > 1 ? 'chip-error' : loc.criticals === 1 ? 'chip-warn' : 'chip-ok';
+    const chipLabel = loc.criticals > 0 ? `${loc.criticals} CRITICAL` : 'ALL CLEAR';
+    return `<div onclick="nav('location-detail',{id:${loc.id}})" class="card flex items-center gap-4 cursor-pointer hover:border-outline transition-colors">
+      <div class="text-[24px] font-bold ${sc} w-16 flex-shrink-0 text-center">${loc.score}%</div>
+      <div class="flex-1 min-w-0">
+        <div class="text-[14px] font-bold">${loc.name}</div>
+        <div class="text-[12px] text-on-surface-variant">${loc.region} · ${loc.address.split(',')[1]||''}</div>
+        <div class="text-[11px] text-on-surface-variant mt-0.5">Last audit: ${loc.lastAudit}</div>
+      </div>
+      <span class="chip ${chip}">${chipLabel}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderLocationDetail(id) {
+  const loc = LOCATIONS.find(l => l.id === id) || LOCATIONS[0];
+  document.getElementById('loc-title-desktop').textContent = loc.name;
+  document.getElementById('header-title').textContent = loc.name;
+  const sc = loc.score < 70 ? 'score-crit' : loc.score < 85 ? 'score-warn' : 'score-ok';
+  const locInspections = INSPECTIONS.filter(i => i.location === loc.name);
+  const inspHTML = locInspections.length
+    ? locInspections.map(i => `<div onclick="nav('completed-inspection')" class="flex justify-between items-center py-2 border-b border-outline-variant cursor-pointer hover:bg-surface-container-low px-1 rounded transition-colors">
+        <div><div class="text-[13px] font-bold">${i.type}</div><div class="text-[12px] text-on-surface-variant">${i.date} · ${i.inspector}</div></div>
+        <span class="chip ${i.status==='failed'?'chip-error':'chip-ok'}">${i.score}%</span>
+      </div>`).join('')
+    : '<div class="text-[13px] text-on-surface-variant">No inspections yet</div>';
+
+  document.getElementById('location-detail-content').innerHTML = `
+    <div class="card bg-primary-container text-on-primary-container flex items-center gap-5">
+      <div class="text-[48px] font-bold ${sc === 'score-crit' ? 'text-error-container' : sc === 'score-warn' ? '' : 'text-secondary-container'} leading-none">${loc.score}%</div>
+      <div>
+        <div class="text-[16px] font-bold">${loc.name}</div>
+        <div class="text-[12px] opacity-70">${loc.address}</div>
+        <div class="text-[12px] opacity-70 mt-1">Last audit: ${loc.lastAudit}</div>
+      </div>
+    </div>
+    <div class="grid grid-cols-3 gap-3">
+      <div class="card text-center"><div class="text-[20px] font-bold text-primary">${locInspections.length}</div><div class="text-[10px] font-bold uppercase tracking-wide text-on-surface-variant mt-1">Inspections</div></div>
+      <div class="card text-center"><div class="text-[20px] font-bold ${loc.criticals > 0 ? 'score-crit' : 'score-ok'}">${loc.criticals}</div><div class="text-[10px] font-bold uppercase tracking-wide text-on-surface-variant mt-1">Criticals</div></div>
+      <div class="card text-center"><div class="text-[20px] font-bold score-ok">${loc.score >= 70 ? loc.score + '%' : 'FAIL'}</div><div class="text-[10px] font-bold uppercase tracking-wide text-on-surface-variant mt-1">Score</div></div>
+    </div>
+    <div>
+      <div class="text-[15px] font-bold mb-3">Inspection History</div>
+      <div>${inspHTML}</div>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="nav('new-inspection')" class="btn-primary flex-1"><span class="material-symbols-outlined">add</span>NEW INSPECTION</button>
+      <button onclick="nav('alerts')" class="btn-outline flex-1"><span class="material-symbols-outlined">warning</span>VIEW RISKS</button>
+    </div>`;
+}
+
+function renderAlerts() {
+  const el = document.getElementById('alerts-list');
+  el.innerHTML = ALERTS.map(a => {
+    const chip = a.severity === 'critical' ? 'chip-error' : a.severity === 'medium' ? 'chip-warn' : 'chip-neutral';
+    const icon = a.severity === 'critical' ? 'emergency' : a.severity === 'medium' ? 'warning' : 'info';
+    const iconColor = a.severity === 'critical' ? 'text-error' : a.severity === 'medium' ? 'text-on-surface-variant' : 'text-outline';
+    const resolvedStyle = a.resolved ? 'opacity-50' : '';
+    return `<div onclick="nav('violation-detail',{id:${a.id}})" class="card flex items-start gap-3 cursor-pointer hover:border-outline transition-colors ${resolvedStyle}">
+      <span class="material-symbols-outlined ${iconColor} flex-shrink-0 mt-0.5">${icon}</span>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <span class="chip ${chip} text-[10px]">${a.severity.toUpperCase()}</span>
+          ${a.resolved ? '<span class="chip chip-ok text-[10px]">RESOLVED</span>' : ''}
+        </div>
+        <div class="text-[13px] font-bold">${a.title}</div>
+        <div class="text-[12px] text-on-surface-variant mt-0.5">${a.desc}</div>
+        <div class="text-[11px] text-on-surface-variant mt-1">${a.location} · ${a.time}</div>
+      </div>
+      ${!a.resolved ? `<button onclick="event.stopPropagation();resolveAlert(${a.id})" class="text-error text-[11px] font-bold flex-shrink-0 mt-1">Resolve</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function resolveAlert(id) {
+  const a = ALERTS.find(x => x.id === id);
+  if (a) { a.resolved = true; renderAlerts(); }
+}
+
+function renderViolationDetail(id) {
+  const v = VIOLATIONS[id] || VIOLATIONS[1];
+  const chip = v.severity === 'critical' ? 'chip-error' : v.severity === 'medium' ? 'chip-warn' : 'chip-neutral';
+  document.getElementById('violation-detail-content').innerHTML = `
+    <div class="card">
+      <span class="chip ${chip} mb-3">${v.severity.toUpperCase()}</span>
+      <div class="text-[17px] font-bold mb-2">${v.title}</div>
+      <div class="text-[13px] text-on-surface-variant leading-relaxed">${v.desc}</div>
+    </div>
+    <div class="card space-y-2">
+      <div class="text-[12px] font-bold uppercase tracking-wider text-on-surface-variant mb-2">Details</div>
+      <div class="flex justify-between text-[14px]"><span class="text-on-surface-variant">Location</span><span class="font-semibold">${v.location}</span></div>
+      <div class="flex justify-between text-[14px]"><span class="text-on-surface-variant">Date Found</span><span class="font-semibold">${v.date}</span></div>
+      <div class="flex justify-between text-[14px]"><span class="text-on-surface-variant">Inspector</span><span class="font-semibold">${v.inspector}</span></div>
+      <div class="flex justify-between text-[14px]"><span class="text-on-surface-variant">Status</span><span class="font-semibold ${v.status==='open'?'text-error':''}">${v.status.toUpperCase()}</span></div>
+    </div>
+    <div class="card">
+      <div class="text-[12px] font-bold uppercase tracking-wider text-on-surface-variant mb-2">Required Remediation</div>
+      <div class="text-[13px] leading-relaxed">${v.remediation}</div>
+    </div>
+    <div class="card">
+      <div class="text-[12px] font-bold uppercase tracking-wider text-on-surface-variant mb-3">Evidence</div>
+      <button onclick="nav('photo-capture')" class="flex items-center gap-2 w-full p-3 border-2 border-dashed border-outline-variant rounded-xl hover:border-primary transition-colors">
+        <span class="material-symbols-outlined text-outline">add_photo_alternate</span>
+        <span class="text-[13px] text-on-surface-variant font-semibold">Attach photo evidence</span>
+      </button>
+    </div>
+    <div class="flex gap-3">
+      <button class="btn-primary flex-1"><span class="material-symbols-outlined">check_circle</span>MARK RESOLVED</button>
+      <button onclick="nav('new-inspection')" class="btn-outline flex-1"><span class="material-symbols-outlined">assignment</span>FOLLOW-UP</button>
+    </div>`;
+}
+
+// ── ITEM DETAIL PASS/FAIL ────────────────────────
+function setPassFail(val) {
+  const pass = document.getElementById('btn-pass');
+  const fail = document.getElementById('btn-fail');
+  if (val === 'pass') {
+    pass.className = 'flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-secondary bg-secondary/10 transition-all';
+    fail.className = 'flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-outline-variant transition-all hover:border-error';
+    pass.querySelector('.material-symbols-outlined').className = 'material-symbols-outlined text-secondary ms-fill';
+    fail.querySelector('.material-symbols-outlined').className = 'material-symbols-outlined text-outline';
+  } else {
+    fail.className = 'flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-error bg-error/10 transition-all';
+    pass.className = 'flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-outline-variant transition-all hover:border-secondary';
+    fail.querySelector('.material-symbols-outlined').className = 'material-symbols-outlined text-error ms-fill';
+    pass.querySelector('.material-symbols-outlined').className = 'material-symbols-outlined text-outline';
+  }
+}
+
+// ── VOICE NOTE RECORD TOGGLE ─────────────────────
+let recording = false;
+let waveInterval = null;
+function toggleRecord() {
+  recording = !recording;
+  const btn = document.getElementById('record-btn');
+  const status = document.getElementById('record-status');
+  const wave = document.getElementById('wave');
+  if (recording) {
+    btn.classList.add('bg-error','scale-110');
+    btn.classList.remove('bg-primary-container');
+    btn.querySelector('.material-symbols-outlined').classList.add('text-on-error');
+    btn.querySelector('.material-symbols-outlined').classList.remove('text-on-primary-container');
+    status.textContent = 'Recording…';
+    status.classList.add('text-error');
+    waveInterval = setInterval(() => {
+      wave.innerHTML = Array.from({length:20},()=>`<div style="width:3px;height:${4+Math.random()*28}px;background:#131b2e;border-radius:2px;transition:height .1s"></div>`).join('');
+    }, 100);
+  } else {
+    btn.classList.remove('bg-error','scale-110');
+    btn.classList.add('bg-primary-container');
+    btn.querySelector('.material-symbols-outlined').classList.remove('text-on-error');
+    btn.querySelector('.material-symbols-outlined').classList.add('text-on-primary-container');
+    status.textContent = 'Recording saved';
+    status.classList.remove('text-error');
+    clearInterval(waveInterval);
+    wave.innerHTML = '';
+    setTimeout(()=>{ status.textContent = 'Tap to record'; }, 2000);
+  }
+}
+
+// ── INIT ─────────────────────────────────────────
+nav('dashboard');
+</script>
+</body>
+</html>
