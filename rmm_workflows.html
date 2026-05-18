@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RMMInspector — Workflow Diagrams</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:#f5f7fa;color:#1f2937;line-height:1.5;
+}
+
+/* ── HEADER ── */
+.header{
+  background:#0A1B4A;padding:0 40px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:10;
+}
+.header .logo-card{
+  background:#fff;border-radius:8px;padding:7px 14px;
+  display:flex;align-items:center;height:44px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.25);
+}
+.header .logo-card img{height:26px;width:auto}
+.header .header-right{
+  display:flex;align-items:center;gap:16px;
+}
+.header .label{font-size:12px;color:rgba(255,255,255,0.5);letter-spacing:0.4px}
+.header .badge{
+  background:rgba(59,130,246,0.25);color:#93c5fd;
+  font-size:11px;font-weight:700;padding:4px 12px;border-radius:99px;
+  letter-spacing:0.4px;border:1px solid rgba(59,130,246,0.3);
+}
+
+/* ── PAGE ── */
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 60px}
+
+.page-title{margin-bottom:8px}
+.page-title h1{font-size:28px;font-weight:700;color:#111827;letter-spacing:-0.3px}
+.page-title p{font-size:14px;color:#6b7280;margin-top:6px;line-height:1.6}
+
+/* ── SECTION ── */
+.section{margin-top:40px}
+.section-header{
+  display:flex;align-items:center;gap:12px;margin-bottom:20px;
+  padding-bottom:14px;border-bottom:2px solid #e5e7eb;
+}
+.section-num{
+  width:32px;height:32px;border-radius:50%;background:#0A1B4A;
+  color:#fff;font-size:14px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.section-header h2{font-size:18px;font-weight:700;color:#111827}
+.section-header p{font-size:13px;color:#6b7280;margin-top:2px}
+
+/* ── DIAGRAM CARD ── */
+.diagram-card{
+  background:#fff;border-radius:12px;border:1px solid #e5e7eb;
+  padding:28px;box-shadow:0 1px 4px rgba(0,0,0,0.04);
+  overflow-x:auto;
+}
+.diagram-card .mermaid{
+  display:flex;justify-content:center;
+}
+
+/* ── LEGEND ── */
+.legend{
+  display:flex;flex-wrap:wrap;gap:12px;margin-top:20px;
+}
+.legend-item{
+  display:flex;align-items:center;gap:7px;
+  font-size:12px;color:#374151;font-weight:500;
+}
+.legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+
+/* ── NOTES ── */
+.notes{
+  background:#fffbeb;border:1px solid #fde68a;border-radius:10px;
+  padding:14px 18px;margin-top:16px;
+}
+.notes p{font-size:13px;color:#92400e;line-height:1.6}
+.notes strong{font-weight:700}
+
+/* ── GRID ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:800px){.grid-2{grid-template-columns:1fr}}
+
+/* ── FOOTER ── */
+.footer{
+  margin-top:60px;padding-top:24px;border-top:1px solid #e5e7eb;
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:12px;
+}
+.footer p{font-size:12px;color:#9ca3af}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-card">
+    <img src="RRM_logo.svg" alt="RRM">
+  </div>
+  <div class="header-right">
+    <span class="label">RMMInspector</span>
+    <span class="badge">WORKFLOW DIAGRAMS · DRAFT</span>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="page-title">
+    <h1>RMMInspector — Workflow Analysis</h1>
+    <p>Draft diagrams for review. These define how inspections, tasks, and roles connect before further development.</p>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       DIAGRAM 1 · Inspection Workflow
+  ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div>
+        <h2>Scheduled Inspection Workflow</h2>
+        <p>From scheduling through completion — and how findings become tasks</p>
+      </div>
+    </div>
+    <div class="diagram-card">
+      <div class="mermaid">
+flowchart TD
+    A([📅 Inspection Scheduled]) --> B[Template Assigned\ne.g. Food Safety Routine]
+    B --> C[/Appears on Owner\n+ Operator Dashboards/]
+    C --> D[Inspector Opens Inspection]
+    D --> E[Walk Through Section]
+    E --> F{Item Result}
+    F -- PASS --> G([✓ Next Item])
+    F -- FAIL / FLAG --> H[Create Task from Item]
+    G --> E
+    H --> I[(Task Created\nwith context pre-filled)]
+    E -- All sections done --> J[Complete Inspection]
+    J --> K[/Inspection Report\nScore + Findings/]
+    K --> L([📋 Submitted & Archived])
+    I --> M([Task Lifecycle ↓ see Diagram 2])
+
+    style A fill:#dbeafe,stroke:#93c5fd,color:#1e40af
+    style L fill:#dcfce7,stroke:#86efac,color:#166534
+    style M fill:#fef3c7,stroke:#fcd34d,color:#92400e
+    style H fill:#fee2e2,stroke:#fca5a5,color:#991b1b
+    style I fill:#fee2e2,stroke:#fca5a5,color:#991b1b
+      </div>
+    </div>
+    <div class="notes">
+      <p><strong>Key point:</strong> An inspection is a <em>point-in-time event</em> with a start and end. It produces a score and may produce zero or many tasks. Templates define what gets checked — they live at the location level and can be customised per restaurant type.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       DIAGRAM 2 · Task Lifecycle
+  ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div>
+        <h2>Task Lifecycle</h2>
+        <p>A task stays open until explicitly resolved — it's a living record</p>
+      </div>
+    </div>
+    <div class="diagram-card">
+      <div class="mermaid">
+flowchart TD
+    A([Task Created]) --> B[Assigned to\nInspector or Operator]
+    B --> C[/Task Detail — OPEN/]
+    C --> D[Add Evidence\nPhotos · Audio · Notes]
+    C --> E[Add Update\nLog progress]
+    D --> C
+    E --> C
+    C --> F{Resolution Action}
+    F -- Mark Resolved --> G([✓ Task Closed\nTimestamp recorded])
+    F -- Request Reinspection --> H([New Inspection\nScheduled])
+    F -- Escalate Issue --> I([Critical Alert\nFlagged to Owner])
+    G --> J[/Archived Record\nRead-only history/]
+    H --> K([Back to Diagram 1])
+    I --> L[Owner Reviews\n+ Assigns follow-up]
+    L --> C
+
+    style A fill:#dbeafe,stroke:#93c5fd,color:#1e40af
+    style G fill:#dcfce7,stroke:#86efac,color:#166534
+    style J fill:#f3f4f6,stroke:#d1d5db,color:#374151
+    style I fill:#fee2e2,stroke:#fca5a5,color:#991b1b
+      </div>
+    </div>
+    <div class="notes">
+      <p><strong>Key point:</strong> A task is <em>never deleted</em> — only resolved and archived. Every update, photo, and note is appended to the timeline. The record shows the full history from creation to resolution.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       DIAGRAM 3 · Triggered Tasks
+  ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div>
+        <h2>Triggered Task Creation</h2>
+        <p>Tasks created outside of a scheduled inspection — reactive workflow</p>
+      </div>
+    </div>
+    <div class="diagram-card">
+      <div class="mermaid">
+flowchart TD
+    A{Trigger Source} --> B[Inspection Finding\nduring walkthrough]
+    A --> C[Incident Report\nmanual entry via New Risk]
+    A --> D[Failed Public\nHealth Inspection]
+    A --> E[Internal Score\nbelow threshold]
+    B --> F[/Task Auto-Created\ncontext pre-filled from inspection/]
+    C --> G[/Task Manually Created\noperator or inspector enters details/]
+    D --> G
+    E --> H[/Task Auto-Created\nlinked to inspection report/]
+    F --> I[(Task Detail\nOpen Record)]
+    G --> I
+    H --> I
+    I --> J([Task Lifecycle ↓ see Diagram 2])
+
+    style A fill:#0A1B4A,stroke:#0A1B4A,color:#fff
+    style F fill:#fef3c7,stroke:#fcd34d,color:#92400e
+    style G fill:#fef3c7,stroke:#fcd34d,color:#92400e
+    style H fill:#fee2e2,stroke:#fca5a5,color:#991b1b
+    style J fill:#fef3c7,stroke:#fcd34d,color:#92400e
+      </div>
+    </div>
+    <div class="notes">
+      <p><strong>Key point:</strong> Tasks created from inspections carry context automatically (location, section, item description, inspector). Tasks created manually via "New Risk" require the operator or inspector to fill in the details. Both end up in the same Tasks list.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       DIAGRAM 4 · Role Views
+  ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div>
+        <h2>Role-Based Views</h2>
+        <p>What each user sees — same app, different scope</p>
+      </div>
+    </div>
+    <div class="diagram-card">
+      <div class="mermaid">
+flowchart TD
+    A([RMMInspector]) --> B{User Role}
+    B -- Inspector / Owner --> C[/Global View\nAll locations/]
+    B -- Operator --> D[/Unit View\nTheir restaurant only/]
+
+    C --> C1[Executive Dashboard\nall locations · KPIs · alerts]
+    C --> C2[All Inspections\nacross every unit]
+    C --> C3[All Tasks\nwith restaurant tag]
+    C --> C4[Reports & Analytics\nregion-wide]
+    C --> C5[Locations List\ndrill into any unit]
+
+    D --> D1[Unit Dashboard\ntheir scores · upcoming inspections]
+    D --> D2[Their Inspections\nscheduled + completed]
+    D --> D3[Their Tasks\nno location tag needed]
+    D --> D4[Task Detail\nevidence + resolution]
+
+    style A fill:#0A1B4A,stroke:#0A1B4A,color:#fff
+    style B fill:#0A1B4A,stroke:#0A1B4A,color:#fff
+    style C fill:#dbeafe,stroke:#93c5fd,color:#1e40af
+    style D fill:#dcfce7,stroke:#86efac,color:#166534
+      </div>
+    </div>
+    <div class="notes">
+      <p><strong>Key point:</strong> The Operator view is scoped — they only ever see their own unit's data. No location filtering needed. The Inspector/Owner view is global with location tags on everything. Both roles share the same Task Detail screen and task lifecycle. Role distinction is built later.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       DIAGRAM 5 · Dashboard Data Model
+  ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div>
+        <h2>Dashboard Widget Map</h2>
+        <p>What appears on each dashboard and where it comes from</p>
+      </div>
+    </div>
+    <div class="diagram-card">
+      <div class="mermaid">
+flowchart LR
+    subgraph Owner ["🔵 Inspector / Owner Dashboard"]
+      OA[Upcoming Inspections\nall units this week]
+      OB[Open Tasks\nby severity · by unit]
+      OC[Compliance Scores\nall locations]
+      OD[Critical Alerts]
+      OE[Recent Activity Feed]
+    end
+
+    subgraph Operator ["🟢 Operator Dashboard"]
+      PA[My Next Inspection\ndate · template · inspector]
+      PB[My Open Tasks\ndue today · overdue]
+      PC[My Compliance Score\ncurrent + trend]
+      PD[My Alerts]
+    end
+
+    subgraph Data ["📦 Data Sources"]
+      DS1[(Inspection\nSchedule)]
+      DS2[(Task\nRecords)]
+      DS3[(Inspection\nReports)]
+      DS4[(Alert\nTriggers)]
+    end
+
+    DS1 --> OA
+    DS1 --> PA
+    DS2 --> OB
+    DS2 --> PB
+    DS3 --> OC
+    DS3 --> PC
+    DS4 --> OD
+    DS4 --> PD
+
+    style Owner fill:#eff6ff,stroke:#bfdbfe
+    style Operator fill:#f0fdf4,stroke:#bbf7d0
+    style Data fill:#f9fafb,stroke:#e5e7eb
+      </div>
+    </div>
+    <div class="notes">
+      <p><strong>Key point:</strong> Both dashboards pull from the same data sources — the difference is scope (all units vs one unit). "Upcoming Inspections" is the most important widget to build next, as it anchors both the Owner and Operator experience.</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>RRM Risk Resource Management · RMMInspector Workflow Diagrams · Draft — May 2026</p>
+    <p>Review with Cliff before proceeding to build</p>
+  </div>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#dbeafe',
+      primaryTextColor: '#1e40af',
+      primaryBorderColor: '#93c5fd',
+      lineColor: '#0A1B4A',
+      secondaryColor: '#f3f4f6',
+      tertiaryColor: '#fff',
+      edgeLabelBackground: '#fff',
+      fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif',
+      fontSize: '14px',
+    },
+    flowchart: {
+      curve: 'basis',
+      padding: 20,
+    }
+  });
+</script>
+
+</body>
+</html>
