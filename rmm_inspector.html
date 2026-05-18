@@ -1083,6 +1083,152 @@ RENDERERS['item-detail'] = function() {
   </div>`;
 };
 
+// S9: Completed Inspection
+RENDERERS['completed-inspection'] = function() {
+  document.getElementById('completed-content').innerHTML = `
+  <div style="max-width:680px">
+    <div style="background:linear-gradient(135deg,#15803d 0%,#166534 100%);border-radius:12px;padding:24px 28px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:24px">
+      <div style="text-align:center;flex-shrink:0">
+        <div style="font-size:64px;font-weight:800;line-height:1">92</div>
+        <div style="font-size:13px;font-weight:700;opacity:0.9;margin-top:2px">PASS</div>
+      </div>
+      <div>
+        <div style="font-size:20px;font-weight:700">Grand Central Kitchen</div>
+        <div style="font-size:12px;opacity:0.85;margin-top:2px">Routine Audit · May 18, 2026 · Mike Rodriguez</div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <span style="background:rgba(255,255,255,0.2);padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700">5 sections</span>
+          <span style="background:rgba(255,255,255,0.2);padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700">30 items</span>
+          <span style="background:rgba(255,255,255,0.2);padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700">2 violations</span>
+        </div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Section Scores</div>
+        ${[['Food Storage',100],['Personal Hygiene',95],['Equipment Sanitation',80],['Pest Control',100],['Documentation',90]].map(([n,s])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f3f4f6">
+          <span style="font-size:13px;color:#374151">${n}</span>
+          <span style="font-size:13px;font-weight:700;color:${scoreColor(s)}">${s}%</span>
+        </div>`).join('')}
+      </div>
+      <div class="card">
+        <div class="section-title">Violations Found (2)</div>
+        ${[{id:4,t:'Sanitizer concentration below standard',sev:'medium'},{id:5,t:'Incomplete temperature log — 3 entries',sev:'low'}].map(v=>`
+        <div class="list-row" onclick="nav('violation-detail',{id:${v.id}})">
+          <div class="row-ic amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
+          <div class="row-body"><div class="name">${v.t}</div><div class="sub">${v.sev.toUpperCase()} priority</div></div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>`).join('')}
+        <div style="margin-top:12px;padding:12px;background:#f9fafb;border-radius:8px;border:1.5px dashed #d1d5db">
+          <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">Inspector Sign-off</div>
+          <div style="font-size:12px;color:#9ca3af">Tap to add digital signature</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+};
+
+// S10: Locations
+RENDERERS['locations'] = function() {
+  document.getElementById('locations-content').innerHTML = `
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <input type="text" placeholder="Search locations…" style="flex:1;min-width:160px;padding:8px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px">
+    <button class="btn-primary" style="white-space:nowrap">+ Add Location</button>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    ${LOCATIONS.map(loc=>`
+    <div class="card" style="padding:14px 18px;cursor:pointer;display:flex;align-items:center;gap:16px" onclick="nav('location-detail',{id:${loc.id}})">
+      <div style="width:52px;height:52px;border-radius:10px;background:${loc.score<70?'#fee2e2':loc.score<85?'#fef3c7':'#dcfce7'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <div style="font-size:15px;font-weight:800;color:${scoreColor(loc.score)}">${loc.score}%</div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:#111827">${loc.name}</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px">${loc.address}</div>
+        <div style="font-size:11px;color:#9ca3af;margin-top:1px">Last audit: ${loc.lastAudit}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        ${loc.criticals>0?`<span class="badge badge-red">${loc.criticals} CRITICAL</span>`:'<span class="badge badge-green">ALL CLEAR</span>'}
+        <div style="margin-top:4px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+    </div>`).join('')}
+  </div>`;
+};
+
+// S11: Location Detail
+RENDERERS['location-detail'] = function(ctx) {
+  const loc=LOCATIONS.find(l=>l.id===(ctx&&ctx.id||1))||LOCATIONS[0];
+  document.getElementById('loc-detail-title').textContent=loc.name;
+  const li=INSPECTIONS.filter(i=>i.location===loc.name);
+  document.getElementById('location-detail-content').innerHTML = `
+  <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+    <div class="kpi-c ${loc.score<70?'red':loc.score<85?'amber':'green'}">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg></div>
+      <div class="tx"><div class="lbl">Score</div><div class="v">${loc.score}%</div><div class="delta ${loc.score>=70?'up':'down'}">${loc.score>=70?'PASS':'FAIL'}</div></div>
+    </div>
+    <div class="kpi-c ${loc.criticals>0?'red':'green'}">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
+      <div class="tx"><div class="lbl">Criticals</div><div class="v">${loc.criticals}</div><div class="delta ${loc.criticals>0?'down':'up'}">${loc.criticals>0?'Active':'None'}</div></div>
+    </div>
+    <div class="kpi-c blue">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg></div>
+      <div class="tx"><div class="lbl">Inspections</div><div class="v">${li.length}</div><div class="delta">All time</div></div>
+    </div>
+    <div class="kpi-c">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="tx"><div class="lbl">Last Audit</div><div class="v" style="font-size:16px">${loc.lastAudit}</div></div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="section-title">Inspection History</div>
+      ${li.length?li.map(i=>`
+      <div class="list-row" onclick="nav('completed-inspection')">
+        <div class="row-ic ${i.score<70?'red':i.score<85?'amber':'green'}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+        </div>
+        <div class="row-body"><div class="name">${i.type} Audit</div><div class="sub">${i.date} · ${i.inspector}</div></div>
+        <div class="row-end"><div style="font-size:16px;font-weight:700;color:${scoreColor(i.score)}">${i.score}%</div></div>
+      </div>`).join(''):'<div style="color:#9ca3af;font-size:13px;padding:12px 0">No inspections yet</div>'}
+    </div>
+    <div>
+      <div class="section-title">Location Info</div>
+      <div class="card" style="padding:14px 16px">
+        ${[['Address',loc.address],['Region',loc.region],['Status',loc.criticals>0?'AT RISK':'Active']].map(([k,v])=>`
+        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f3f4f6;font-size:13px">
+          <span style="color:#6b7280;font-weight:600">${k}</span><span style="color:#111827">${v}</span>
+        </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn-primary" onclick="nav('new-inspection')" style="flex:1;justify-content:center">Start Inspection</button>
+        <button class="btn-outline" onclick="nav('alerts')" style="flex:1;justify-content:center">View Risks</button>
+      </div>
+    </div>
+  </div>`;
+};
+
+// S12: Alerts
+RENDERERS['alerts'] = function() {
+  document.getElementById('alerts-content').innerHTML = `
+  <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
+    ${[['All',ALERTS.length],['Active',ALERTS.filter(a=>!a.resolved).length],['Resolved',ALERTS.filter(a=>a.resolved).length]].map(([l,c],i)=>`
+    <button class="badge ${i===0?'badge-navy':'badge-gray'}" style="padding:5px 12px;cursor:pointer;font-size:11px">${l} (${c})</button>`).join('')}
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px" id="alerts-list">
+    ${ALERTS.map(a=>`
+    <div class="alert-bar ${a.sev==='critical'?'crit':a.sev==='medium'?'warn':'info'} ${a.resolved?'opacity-50':''}" style="cursor:pointer;${a.resolved?'opacity:0.5':''}" onclick="nav('violation-detail',{id:${a.id}})">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div class="ab-body">
+        <div class="abt">${a.title} <span class="badge ${a.sev==='critical'?'badge-red':a.sev==='medium'?'badge-amber':'badge-gray'}" style="margin-left:4px">${a.sev.toUpperCase()}</span> ${a.resolved?'<span class="badge badge-green">RESOLVED</span>':''}</div>
+        <div class="abs">${a.desc} · ${a.loc} · ${a.time}</div>
+      </div>
+      ${!a.resolved?`<span onclick="event.stopPropagation();resolveAlert(${a.id})" class="ab-act">Resolve</span>`:`<span class="ab-ts">${a.time}</span>`}
+    </div>`).join('')}
+  </div>`;
+};
+function resolveAlert(id){const a=ALERTS.find(x=>x.id===id);if(a){a.resolved=true;RENDERERS['alerts']();}}
+
 function togglePF(el,val){
   const row=el.closest('.pf-grid');
   row.querySelectorAll('.pf-btn').forEach(b=>{
