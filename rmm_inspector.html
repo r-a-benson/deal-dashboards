@@ -1,1008 +1,773 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RMMInspector</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-tailwind.config = {
-  darkMode:"class",
-  theme:{extend:{
-    colors:{
-      "primary":"#000000","on-primary":"#ffffff","primary-container":"#131b2e","on-primary-container":"#7c839b",
-      "secondary":"#006e2f","on-secondary":"#ffffff","secondary-container":"#6bff8f","on-secondary-container":"#007432",
-      "tertiary":"#000000","tertiary-container":"#001a42","on-tertiary-container":"#3980f4",
-      "error":"#ba1a1a","on-error":"#ffffff","error-container":"#ffdad6","on-error-container":"#93000a",
-      "background":"#f7f9fb","on-background":"#191c1e",
-      "surface":"#f7f9fb","on-surface":"#191c1e","on-surface-variant":"#45464d",
-      "surface-dim":"#d8dadc","surface-bright":"#f7f9fb",
-      "surface-container-lowest":"#ffffff","surface-container-low":"#f2f4f6",
-      "surface-container":"#eceef0","surface-container-high":"#e6e8ea","surface-container-highest":"#e0e3e5",
-      "outline":"#76777d","outline-variant":"#c6c6cd",
-      "inverse-surface":"#2d3133","inverse-on-surface":"#eff1f3","inverse-primary":"#bec6e0",
-    },
-    borderRadius:{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","2xl":"0.75rem","full":"9999px"},
-    spacing:{
-      "touch-target-min":"44px","stack-lg":"24px","margin-page":"24px",
-      "stack-sm":"8px","gutter-grid":"16px","card-padding":"20px","stack-md":"16px"
-    },
-    fontFamily:{
-      "label-sm":["Inter"],"display-lg-mobile":["Inter"],"headline-sm":["Inter"],
-      "headline-md":["Inter"],"display-lg":["Inter"],"body-lg":["Inter"],
-      "label-bold":["Inter"],"body-md":["Inter"]
-    },
-    fontSize:{
-      "label-sm":["11px",{lineHeight:"14px",fontWeight:"500"}],
-      "display-lg-mobile":["24px",{lineHeight:"32px",fontWeight:"700"}],
-      "headline-sm":["20px",{lineHeight:"28px",fontWeight:"600"}],
-      "headline-md":["24px",{lineHeight:"32px",fontWeight:"600"}],
-      "display-lg":["32px",{lineHeight:"40px",letterSpacing:"-0.02em",fontWeight:"700"}],
-      "body-lg":["16px",{lineHeight:"24px",fontWeight:"400"}],
-      "label-bold":["12px",{lineHeight:"16px",fontWeight:"700"}],
-      "body-md":["14px",{lineHeight:"20px",fontWeight:"400"}]
-    }
-  }}
-}
-</script>
 <style>
-.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}
-.ms-fill{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24}
-body{font-family:'Inter',sans-serif;min-height:max(884px,100dvh)}
-.hide-scrollbar::-webkit-scrollbar{display:none}
-.hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+     background:#f5f7fa;color:#1f2937;line-height:1.4;font-size:14px}
+
+/* ── APP SHELL ── */
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{background:#0A1B4A;color:#fff;display:flex;flex-direction:column;
+         position:sticky;top:0;height:100vh;overflow-y:auto;z-index:40}
+.brand{padding:14px;border-bottom:1px solid rgba(255,255,255,0.08);
+       display:flex;justify-content:center;align-items:center}
+.brand .logo-card{background:#fff;border-radius:8px;padding:9px 12px;width:100%;
+                  display:flex;align-items:center;justify-content:center;
+                  box-shadow:0 1px 4px rgba(0,0,0,0.25)}
+.brand .logo-card img{display:block;height:28px;width:auto}
+
+.nav{flex:1;padding:14px 0;overflow-y:auto}
+.nav-section{padding:12px 20px 6px;font-size:10px;font-weight:700;
+             letter-spacing:0.8px;color:rgba(255,255,255,0.4);text-transform:uppercase}
+.nav a{display:flex;align-items:center;gap:11px;padding:9px 20px;
+       color:rgba(255,255,255,0.75);text-decoration:none;font-size:13px;
+       border-left:3px solid transparent;transition:background 0.15s;cursor:pointer}
+.nav a svg{width:16px;height:16px;flex-shrink:0}
+.nav a:hover{background:rgba(255,255,255,0.05);color:#fff}
+.nav a.active{background:rgba(59,130,246,0.15);color:#fff;border-left-color:#3b82f6}
+.nav a .badge{margin-left:auto;background:#ef4444;color:#fff;font-size:9px;font-weight:700;
+              border-radius:99px;padding:1px 5px;line-height:1.4}
+
+/* ── SUITE TILES ── */
+.suite{padding:6px 12px 14px}
+.suite-label{font-size:10px;font-weight:700;letter-spacing:0.8px;
+             color:rgba(255,255,255,0.4);text-transform:uppercase;
+             padding:8px 8px 6px}
+.suite-tile{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;
+            cursor:pointer;color:#fff;transition:background 0.15s;margin-bottom:3px;
+            position:relative;text-decoration:none}
+.suite-tile:hover{background:rgba(255,255,255,0.06)}
+.suite-tile.active{background:rgba(59,130,246,0.18);
+                   box-shadow:inset 0 0 0 1px rgba(59,130,246,0.4)}
+.suite-tile .pico{width:36px;height:36px;border-radius:8px;flex-shrink:0;
+                  display:flex;align-items:center;justify-content:center;
+                  background:#fff;padding:5px}
+.suite-tile .pico svg{width:100%;height:100%;display:block}
+.suite-tile .ptx{flex:1;min-width:0}
+.suite-tile .pn{font-size:12px;font-weight:700;line-height:1.1;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.suite-tile .pn b{color:#3b82f6}
+.suite-tile.active .pn b{color:#60a5fa}
+.suite-tile .pt{font-size:9.5px;opacity:0.6;margin-top:1px;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.suite-tile .pdot{position:absolute;top:8px;right:8px;width:6px;height:6px;
+                  border-radius:50%;background:#10b981}
+.suite-tile .pdot.dim{background:#fbbf24}
+.suite-tile.active .pn::after{content:' • Active';color:#60a5fa;font-size:9px;
+                               font-weight:600;letter-spacing:0.3px}
+
+.userbox{padding:14px 20px;border-top:1px solid rgba(255,255,255,0.08);
+         display:flex;align-items:center;gap:10px;font-size:12px;flex-shrink:0}
+.userbox .av{width:32px;height:32px;border-radius:50%;background:#16a34a;
+             color:#fff;display:flex;align-items:center;justify-content:center;
+             font-size:12px;font-weight:700;flex-shrink:0}
+.userbox b{display:block;font-weight:600;font-size:12.5px}
+.userbox span{font-size:10.5px;opacity:0.6}
+
+/* ── MAIN ── */
+.main{padding:0;min-width:0;display:flex;flex-direction:column}
+
+/* ── TOPBAR ── */
+.topbar{background:#fff;padding:16px 28px;display:flex;align-items:center;
+        gap:18px;border-bottom:1px solid #e5e7eb;flex-wrap:wrap;flex-shrink:0}
+.crumb h2{font-size:18px;font-weight:700;color:#111827;margin-bottom:1px;
+          display:flex;align-items:center;gap:6px}
+.crumb .sub{font-size:11px;color:#6b7280}
+.crumb .sub b{color:#0a2540;font-weight:600}
+.topbar-ctrl{margin-left:auto;display:flex;gap:8px;align-items:center}
+.pill-btn{padding:7px 13px;background:#f9fafb;border:1px solid #e5e7eb;
+          border-radius:7px;font-size:12.5px;color:#374151;cursor:pointer;
+          display:flex;align-items:center;gap:7px;white-space:nowrap}
+.pill-btn:hover{background:#f3f4f6}
+.pill-btn svg{width:13px;height:13px;color:#6b7280;flex-shrink:0}
+.icon-btn{width:34px;height:34px;border-radius:7px;background:#f9fafb;
+          border:1px solid #e5e7eb;display:flex;align-items:center;
+          justify-content:center;cursor:pointer;position:relative}
+.icon-btn svg{width:15px;height:15px;color:#6b7280}
+.icon-btn .dot{position:absolute;top:5px;right:5px;background:#ef4444;color:#fff;
+               font-size:9px;font-weight:700;border-radius:99px;padding:0 4px;line-height:1.5}
+.btn-primary{padding:7px 14px;background:#0a2540;color:#fff;border:1px solid #0a2540;
+             border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;
+             display:flex;align-items:center;gap:7px;white-space:nowrap}
+.btn-primary:hover{opacity:0.9}
+.btn-primary svg{width:13px;height:13px;color:#fff}
+.btn-outline{padding:7px 13px;background:#fff;color:#374151;border:1px solid #d1d5db;
+             border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;
+             display:flex;align-items:center;gap:7px;white-space:nowrap}
+.btn-outline:hover{background:#f9fafb}
+.btn-outline svg{width:13px;height:13px;color:#6b7280}
+.btn-danger{padding:7px 13px;background:#ef4444;color:#fff;border:1px solid #ef4444;
+            border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;
+            display:flex;align-items:center;gap:7px;white-space:nowrap}
+
+/* ── CONTENT ── */
+.content{padding:22px 28px;flex:1}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:10px;padding:18px 20px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.card-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.card-h h3{font-size:14px;font-weight:700;color:#111827;display:flex;align-items:center;gap:6px}
+.card-h .lk{font-size:12px;color:#3b82f6;font-weight:500;cursor:pointer;text-decoration:none}
+.card-h .lk:hover{text-decoration:underline}
+
+/* ── KPI STRIP ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi-c{background:#fff;border-radius:10px;padding:14px 16px;
+       display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.kpi-c .ic{width:42px;height:42px;border-radius:50%;background:#f3f4f6;
+           display:flex;align-items:center;justify-content:center;flex-shrink:0;
+           border:1.5px solid #e5e7eb}
+.kpi-c .ic svg{width:20px;height:20px;color:#0a2540}
+.kpi-c.blue .ic{background:#dbeafe;border-color:#bfdbfe}.kpi-c.blue .ic svg{color:#1e40af}
+.kpi-c.green .ic{background:#dcfce7;border-color:#bbf7d0}.kpi-c.green .ic svg{color:#16a34a}
+.kpi-c.amber .ic{background:#fef3c7;border-color:#fde68a}.kpi-c.amber .ic svg{color:#92400e}
+.kpi-c.red .ic{background:#fee2e2;border-color:#fecaca}.kpi-c.red .ic svg{color:#b91c1c}
+.kpi-c.purple .ic{background:#ede9fe;border-color:#ddd6fe}.kpi-c.purple .ic svg{color:#6d28d9}
+.kpi-c.cyan .ic{background:#cffafe;border-color:#a5f3fc}.kpi-c.cyan .ic svg{color:#0e7490}
+.kpi-c .tx .lbl{font-size:9.5px;font-weight:700;color:#6b7280;text-transform:uppercase;
+                letter-spacing:0.5px;margin-bottom:2px}
+.kpi-c .tx .v{font-size:22px;font-weight:700;color:#111827;line-height:1.1}
+.kpi-c .tx .delta{font-size:10px;color:#6b7280;margin-top:3px}
+.kpi-c .tx .delta.up{color:#16a34a}.kpi-c .tx .delta.down{color:#dc2626}
+
+/* ── GRID LAYOUTS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+
+/* ── BADGES / CHIPS ── */
+.badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:99px;
+       font-size:10px;font-weight:700;letter-spacing:0.3px}
+.badge-red{background:#fee2e2;color:#991b1b}
+.badge-green{background:#dcfce7;color:#166534}
+.badge-amber{background:#fef3c7;color:#92400e}
+.badge-blue{background:#dbeafe;color:#1e40af}
+.badge-gray{background:#f3f4f6;color:#374151}
+.badge-navy{background:#0a2540;color:#fff}
+
+/* ── STATUS ROWS ── */
+.list-row{display:flex;align-items:center;gap:12px;padding:10px 0;
+          border-bottom:1px solid #f3f4f6;cursor:pointer}
+.list-row:last-child{border-bottom:0}
+.list-row:hover{background:#f9fafb;margin:0 -6px;padding:10px 6px;border-radius:6px}
+.list-row .row-ic{width:32px;height:32px;border-radius:50%;background:#f3f4f6;
+                  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.list-row .row-ic svg{width:15px;height:15px;color:#6b7280}
+.list-row .row-ic.red{background:#fee2e2}.list-row .row-ic.red svg{color:#b91c1c}
+.list-row .row-ic.amber{background:#fef3c7}.list-row .row-ic.amber svg{color:#d97706}
+.list-row .row-ic.green{background:#dcfce7}.list-row .row-ic.green svg{color:#16a34a}
+.list-row .row-ic.blue{background:#dbeafe}.list-row .row-ic.blue svg{color:#2563eb}
+.list-row .row-body{flex:1;min-width:0}
+.list-row .row-body .name{font-size:13px;font-weight:600;color:#111827;
+                          white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list-row .row-body .sub{font-size:11px;color:#6b7280;margin-top:1px}
+.list-row .row-end{text-align:right;flex-shrink:0}
+
+/* ── SCORE RING ── */
+.ring-wrap{position:relative;flex-shrink:0}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-wrap .ring-num{position:absolute;inset:0;display:flex;flex-direction:column;
+                     align-items:center;justify-content:center}
+.ring-wrap .ring-num .rv{font-size:28px;font-weight:800;line-height:1}
+.ring-wrap .ring-num .rl{font-size:9px;color:#9ca3af;font-weight:600;letter-spacing:0.4px}
+
+/* ── PROGRESS BAR ── */
+.prog-bar{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-top:4px}
+.prog-bar div{height:100%;border-radius:3px}
+
+/* ── SECTION DIVIDER ── */
+.section-title{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;
+               letter-spacing:0.6px;margin-bottom:12px;margin-top:4px}
+
+/* ── FORM ELEMENTS ── */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:700;color:#374151;
+             text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;
+             border:1px solid #d1d5db;border-radius:7px;font-size:13px;
+             background:#fff;color:#111827;font-family:inherit;
+             transition:border-color 0.15s}
+.field input:focus,.field select:focus,.field textarea:focus{
+             outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,0.1)}
+.field textarea{resize:vertical;min-height:72px}
+.radio-group{display:flex;flex-direction:column;gap:8px}
+.radio-opt{display:flex;align-items:center;gap:10px;padding:10px 14px;
+           border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer}
+.radio-opt.sel{border-color:#3b82f6;background:#eff6ff}
+.radio-opt input{accent-color:#3b82f6}
+.radio-opt .ro-body .ro-title{font-size:13px;font-weight:600;color:#111827}
+.radio-opt .ro-body .ro-sub{font-size:11.5px;color:#6b7280;margin-top:1px}
+
+/* ── PASS/FAIL TOGGLE ── */
+.pf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pf-btn{display:flex;flex-direction:column;align-items:center;gap:6px;
+        padding:16px;border-radius:10px;border:2px solid #e5e7eb;cursor:pointer;
+        transition:all 0.15s;background:#fff}
+.pf-btn svg{width:28px;height:28px}
+.pf-btn span{font-size:12px;font-weight:700;letter-spacing:0.3px}
+.pf-btn.pass-sel{border-color:#16a34a;background:#f0fdf4}
+.pf-btn.pass-sel svg{color:#16a34a}.pf-btn.pass-sel span{color:#16a34a}
+.pf-btn.fail-sel{border-color:#dc2626;background:#fef2f2}
+.pf-btn.fail-sel svg{color:#dc2626}.pf-btn.fail-sel span{color:#dc2626}
+.pf-btn.pass-idle svg{color:#9ca3af}.pf-btn.pass-idle span{color:#9ca3af}
+.pf-btn.fail-idle svg{color:#9ca3af}.pf-btn.fail-idle span{color:#9ca3af}
+
+/* ── TOGGLE SWITCH ── */
+.tog{position:relative;width:44px;height:24px;flex-shrink:0}
+.tog input{opacity:0;width:0;height:0}
+.tog-sl{position:absolute;inset:0;background:#d1d5db;border-radius:99px;cursor:pointer;transition:.2s}
+.tog-sl:before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;
+               background:#fff;border-radius:50%;transition:.2s}
+.tog input:checked+.tog-sl{background:#16a34a}
+.tog input:checked+.tog-sl:before{transform:translateX(20px)}
+
+/* ── ALERT BANNER ── */
+.alert-bar{display:flex;align-items:center;gap:12px;padding:12px 16px;
+           border-radius:8px;margin-bottom:10px}
+.alert-bar.crit{background:#fef2f2;border-left:4px solid #dc2626}
+.alert-bar.warn{background:#fffbeb;border-left:4px solid #f59e0b}
+.alert-bar.info{background:#eff6ff;border-left:4px solid #3b82f6}
+.alert-bar svg{width:18px;height:18px;flex-shrink:0}
+.alert-bar.crit svg{color:#dc2626}.alert-bar.warn svg{color:#f59e0b}.alert-bar.info svg{color:#3b82f6}
+.alert-bar .ab-body{flex:1;min-width:0}
+.alert-bar .ab-body .abt{font-size:13px;font-weight:600;color:#111827}
+.alert-bar .ab-body .abs{font-size:11.5px;color:#6b7280;margin-top:1px}
+.alert-bar .ab-act{font-size:11.5px;font-weight:600;color:#dc2626;cursor:pointer;
+                   flex-shrink:0;white-space:nowrap}
+.alert-bar .ab-ts{font-size:10.5px;color:#9ca3af;flex-shrink:0}
+
+/* ── MOBILE ── */
+.mob-header{display:none;background:#0A1B4A;color:#fff;padding:0 16px;height:54px;
+            align-items:center;justify-content:space-between;
+            position:sticky;top:0;z-index:40;flex-shrink:0}
+.mob-header .mh-brand{font-size:15px;font-weight:700;letter-spacing:-0.2px}
+.mob-header .mh-right{display:flex;align-items:center;gap:10px}
+.mob-header button{background:transparent;border:0;color:#fff;cursor:pointer;
+                   display:flex;align-items:center;justify-content:center;
+                   width:34px;height:34px;border-radius:6px}
+.mob-header button:hover{background:rgba(255,255,255,0.1)}
+.mob-header button svg{width:20px;height:20px}
+.mob-sub{display:none;background:#fff;padding:10px 16px 4px;
+         border-bottom:1px solid #e5e7eb;flex-shrink:0}
+.mob-sub .ms-title{font-size:16px;font-weight:700;color:#111827}
+.mob-sub .ms-sub{font-size:11px;color:#6b7280}
+
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
+         background:#fff;border-top:1px solid #e5e7eb;
+         display:none;justify-content:space-around;align-items:center;
+         padding:6px 0 max(6px,env(safe-area-inset-bottom))}
+.mob-nav a{display:flex;flex-direction:column;align-items:center;gap:2px;
+           color:#9ca3af;text-decoration:none;font-size:9.5px;font-weight:600;
+           padding:4px 12px;border-radius:8px;cursor:pointer;transition:color 0.15s}
+.mob-nav a.active{color:#0a2540}
+.mob-nav a svg{width:20px;height:20px}
+
+/* ── SCREEN VISIBILITY ── */
 .screen{display:none}
 .screen.active{display:block}
-.toggle{position:relative;width:48px;height:26px;flex-shrink:0}
-.toggle input{opacity:0;width:0;height:0}
-.toggle-slider{position:absolute;inset:0;background:#c6c6cd;border-radius:999px;cursor:pointer;transition:.2s}
-.toggle-slider:before{content:'';position:absolute;height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
-.toggle input:checked+.toggle-slider{background:#006e2f}
-.toggle input:checked+.toggle-slider:before{transform:translateX(22px)}
-.ring-svg{transform:rotate(-90deg)}
+
+/* ── HIDE-SCROLL ── */
+.hide-scroll::-webkit-scrollbar{display:none}
+.hide-scroll{-ms-overflow-style:none;scrollbar-width:none}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .mob-header{display:flex}
+  .mob-sub{display:block}
+  .mob-nav{display:flex}
+  .main{padding-bottom:64px}
+  .content{padding:16px}
+  .topbar{display:none}
+  .kpi-strip{grid-template-columns:1fr 1fr}
+  .grid-3{grid-template-columns:1fr 1fr}
+  .grid-4{grid-template-columns:1fr 1fr}
+}
+@media(max-width:540px){
+  .kpi-strip{grid-template-columns:1fr 1fr}
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+}
 </style>
 </head>
-<body class="bg-background text-on-surface">
+<body>
+<div class="app">
 
-<!-- ═══════════════════════════════════════════
-     DESKTOP SIDEBAR
-═══════════════════════════════════════════ -->
-<aside class="hidden lg:flex flex-col fixed left-0 top-0 z-40 h-screen w-[240px] pt-margin-page bg-surface-container border-r border-outline-variant">
-  <div class="font-headline-md text-headline-md font-bold text-primary mb-8 px-6">RMMInspector</div>
-  <nav class="flex flex-col gap-1 pr-4" id="desktop-nav">
-    <a class="desk-nav bg-primary-container text-on-primary-container font-bold rounded-r-full py-3 px-6 flex items-center gap-4 transition-opacity hover:opacity-80 cursor-pointer" data-screen="dashboard" onclick="nav('dashboard')">
-      <span class="material-symbols-outlined">dashboard</span><span class="font-body-md text-body-md">Dashboard</span>
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="logo-card">
+      <img src="RRM_logo.svg" alt="RRM">
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Overview</div>
+    <a class="active" onclick="nav('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
     </a>
-    <a class="desk-nav text-on-surface-variant py-3 px-6 rounded-r-full flex items-center gap-4 hover:bg-surface-container-highest transition-colors cursor-pointer" data-screen="alerts" onclick="nav('alerts')">
-      <span class="material-symbols-outlined">warning</span><span class="font-body-md text-body-md">Critical Alerts</span>
-      <span class="ml-auto bg-error text-on-error text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-tight">3</span>
+    <a onclick="nav('alerts')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Critical Alerts <span class="badge" id="alert-count">3</span>
     </a>
-    <a class="desk-nav text-on-surface-variant py-3 px-6 rounded-r-full flex items-center gap-4 hover:bg-surface-container-highest transition-colors cursor-pointer" data-screen="locations" onclick="nav('locations')">
-      <span class="material-symbols-outlined">store</span><span class="font-body-md text-body-md">Locations</span>
+    <a onclick="nav('locations')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Locations
     </a>
-    <a class="desk-nav text-on-surface-variant py-3 px-6 rounded-r-full flex items-center gap-4 hover:bg-surface-container-highest transition-colors cursor-pointer" data-screen="inspections" onclick="nav('inspections')">
-      <span class="material-symbols-outlined">assignment</span><span class="font-body-md text-body-md">Inspections</span>
+    <div class="nav-section">Inspections</div>
+    <a onclick="nav('inspections')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      All Inspections
     </a>
-    <a class="desk-nav text-on-surface-variant py-3 px-6 rounded-r-full flex items-center gap-4 hover:bg-surface-container-highest transition-colors cursor-pointer" data-screen="new-inspection" onclick="nav('new-inspection')">
-      <span class="material-symbols-outlined">add_circle</span><span class="font-body-md text-body-md">New Inspection</span>
+    <a onclick="nav('new-inspection')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      New Inspection
     </a>
-    <a class="desk-nav text-on-surface-variant py-3 px-6 rounded-r-full flex items-center gap-4 hover:bg-surface-container-highest transition-colors cursor-pointer" data-screen="reports" onclick="nav('reports')">
-      <span class="material-symbols-outlined">bar_chart</span><span class="font-body-md text-body-md">Reports</span>
+    <div class="nav-section">Analytics</div>
+    <a onclick="nav('reports')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Reports
     </a>
-    <a class="desk-nav text-on-surface-variant py-3 px-6 rounded-r-full flex items-center gap-4 hover:bg-surface-container-highest transition-colors cursor-pointer" data-screen="profile" onclick="nav('profile')">
-      <span class="material-symbols-outlined">person</span><span class="font-body-md text-body-md">Profile</span>
+    <div class="nav-section">Account</div>
+    <a onclick="nav('profile')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
     </a>
-    <a class="desk-nav text-on-surface-variant py-3 px-6 rounded-r-full flex items-center gap-4 hover:bg-surface-container-highest transition-colors cursor-pointer" data-screen="settings" onclick="nav('settings')">
-      <span class="material-symbols-outlined">settings</span><span class="font-body-md text-body-md">Settings</span>
+    <a onclick="nav('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+      Settings
     </a>
   </nav>
-  <div class="mt-auto px-4 py-4 border-t border-outline-variant flex items-center gap-3">
-    <div class="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-[12px] flex-shrink-0">MR</div>
-    <div class="min-w-0"><div class="font-label-bold text-label-bold truncate">Mike Rodriguez</div><div class="text-label-sm text-on-surface-variant">Senior Inspector</div></div>
+
+  <div class="suite">
+    <div class="suite-label">RRM Suite</div>
+    <a class="suite-tile" href="./Envision_GL_Compass_Dashboard_v8branded.html">
+      <div class="pico"><svg viewBox="0 0 24 24" fill="none" stroke="#0A1B4A" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></div>
+      <div class="ptx"><div class="pn"><b>RRM</b>Compass</div><div class="pt">Risk Intelligence</div></div>
+      <div class="pdot dim"></div>
+    </a>
+    <a class="suite-tile active" onclick="nav('dashboard')">
+      <div class="pico"><svg viewBox="0 0 24 24" fill="none" stroke="#0A1B4A" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+      <div class="ptx"><div class="pn"><b>RMM</b>Inspector</div><div class="pt">Inspections & Food Safety</div></div>
+      <div class="pdot"></div>
+    </a>
+  </div>
+
+  <div class="userbox">
+    <div class="av">MR</div>
+    <div><b>Mike Rodriguez</b><span>Senior Inspector</span></div>
   </div>
 </aside>
 
-<!-- ═══════════════════════════════════════════
-     MAIN
-═══════════════════════════════════════════ -->
-<main class="min-h-screen pb-24 lg:pl-[240px]">
-
-<!-- ─────────────────────────────────────────
-     SHARED TOPBAR (all screens)
-───────────────────────────────────────── -->
-<header class="flex justify-between items-center px-margin-page w-full h-[64px] bg-surface-container-low sticky top-0 z-30 border-b border-outline-variant">
-  <div class="flex items-center gap-3">
-    <button id="back-btn" class="hidden p-2 hover:bg-surface-container-high rounded-full transition-colors active:scale-95" onclick="goBack()">
-      <span class="material-symbols-outlined text-primary">arrow_back</span>
+<!-- ═══════════ MOBILE HEADER ═══════════ -->
+<div class="mob-header">
+  <div class="mh-brand">RMMInspector</div>
+  <div class="mh-right">
+    <button onclick="nav('alerts')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
     </button>
-    <button id="menu-btn" class="lg:hidden p-2 hover:bg-surface-container-high rounded-full transition-colors active:scale-95">
-      <span class="material-symbols-outlined text-primary">menu</span>
+    <button onclick="nav('profile')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     </button>
-    <div class="flex flex-col">
-      <span class="font-label-bold text-label-bold text-on-surface-variant" id="header-region">REGION</span>
-      <div class="flex items-center gap-1">
-        <span class="font-headline-md text-headline-md font-bold text-primary" id="header-title">West Coast Region</span>
-        <span id="header-chevron" class="material-symbols-outlined text-sm text-on-surface-variant">expand_more</span>
-      </div>
-    </div>
   </div>
-  <div class="flex items-center gap-4">
-    <button onclick="nav('alerts')" class="relative p-2 hover:bg-surface-container-high rounded-full transition-colors">
-      <span class="material-symbols-outlined text-primary">notifications</span>
-      <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
-    </button>
-    <button onclick="nav('profile')" class="w-10 h-10 rounded-full bg-primary-container overflow-hidden border border-outline-variant flex items-center justify-center text-on-primary-container font-bold text-[12px]">MR</button>
-  </div>
-</header>
+</div>
+<div class="mob-sub">
+  <div class="ms-title" id="mob-title">Dashboard</div>
+  <div class="ms-sub" id="mob-sub">West Coast Region</div>
+</div>
 
-<!-- ─────────────────────────────────────────
-     S1 · Executive Dashboard
-───────────────────────────────────────── -->
+<!-- ═══════════ MAIN CONTENT ═══════════ -->
+<div class="main">
+
+<!-- SCREENS GO HERE (added in subsequent steps) -->
 <div id="screen-dashboard" class="screen active">
-<section class="p-margin-page">
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-gutter-grid">
-    <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl">
-      <div class="flex justify-between items-start mb-2"><span class="font-label-bold text-label-bold text-on-surface-variant uppercase">Compliance</span><span class="material-symbols-outlined text-secondary">trending_up</span></div>
-      <div class="font-display-lg-mobile lg:font-display-lg text-primary">94.2%</div>
-      <div class="text-secondary font-label-bold text-label-bold mt-1">+2.4% vs last mo</div>
+  <div class="topbar">
+    <div class="crumb">
+      <h2>Executive Dashboard
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </h2>
+      <div class="sub"><b>West Coast Region</b> · May 18, 2026</div>
     </div>
-    <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl">
-      <div class="flex justify-between items-start mb-2"><span class="font-label-bold text-label-bold text-on-surface-variant uppercase">Critical Risks</span><span class="material-symbols-outlined text-error">warning</span></div>
-      <div class="font-display-lg-mobile lg:font-display-lg text-primary">12</div>
-      <div class="text-on-surface-variant font-label-bold text-label-bold mt-1">Across 4 locations</div>
-    </div>
-    <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl">
-      <div class="flex justify-between items-start mb-2"><span class="font-label-bold text-label-bold text-on-surface-variant uppercase">Overdue Actions</span><span class="material-symbols-outlined text-outline">history</span></div>
-      <div class="font-display-lg-mobile lg:font-display-lg text-primary">08</div>
-      <div class="text-error font-label-bold text-label-bold mt-1">Needs attention</div>
-    </div>
-    <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl">
-      <div class="flex justify-between items-start mb-2"><span class="font-label-bold text-label-bold text-on-surface-variant uppercase">Completion</span><span class="material-symbols-outlined text-primary">checklist</span></div>
-      <div class="font-display-lg-mobile lg:font-display-lg text-primary">88%</div>
-      <div class="text-on-surface-variant font-label-bold text-label-bold mt-1">Goal: 95%</div>
+    <div class="topbar-ctrl">
+      <button class="pill-btn" onclick="nav('new-inspection')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        New Inspection
+      </button>
+      <button class="icon-btn" onclick="nav('alerts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="dot">3</span>
+      </button>
     </div>
   </div>
-</section>
-
-<section class="px-margin-page mb-stack-lg">
-  <div class="flex justify-between items-center mb-stack-md">
-    <h2 class="font-headline-sm text-headline-sm text-primary">Multi-Location Summary</h2>
-    <button onclick="nav('locations')" class="text-primary font-label-bold text-label-bold flex items-center gap-1 hover:underline">Manage Locations <span class="material-symbols-outlined text-sm">chevron_right</span></button>
+  <div class="content" id="dashboard-content">
+    <p style="color:#9ca3af;font-size:13px">Loading dashboard…</p>
   </div>
-  <div class="flex lg:grid lg:grid-cols-3 overflow-x-auto gap-gutter-grid hide-scrollbar pb-4 -mx-margin-page px-margin-page lg:mx-0 lg:px-0">
-    <div onclick="nav('location-detail',{id:1})" class="min-w-[280px] flex-shrink-0 bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow">
-      <div class="flex justify-between items-start mb-4"><div><h3 class="font-label-bold text-label-bold text-primary">South Station Deli</h3><p class="font-label-sm text-label-sm text-on-surface-variant">Last Audit: 2d ago</p></div><span class="bg-error-container text-on-error-container text-[10px] font-bold px-2 py-1 rounded">2 CRITICAL</span></div>
-      <div class="flex items-end justify-between"><div><span class="font-headline-md text-headline-md font-bold text-error">64%</span><div class="w-24 h-8 mt-2 overflow-hidden"><svg class="w-full h-full stroke-error fill-none stroke-2" viewBox="0 0 100 30"><polyline points="0,25 20,28 40,15 60,25 80,20 100,28"/></svg></div></div><span class="material-symbols-outlined text-error">error_outline</span></div>
-    </div>
-    <div onclick="nav('location-detail',{id:2})" class="min-w-[280px] flex-shrink-0 bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow">
-      <div class="flex justify-between items-start mb-4"><div><h3 class="font-label-bold text-label-bold text-primary">Broadway Express</h3><p class="font-label-sm text-label-sm text-on-surface-variant">Last Audit: 5h ago</p></div><span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-1 rounded">1 CRITICAL</span></div>
-      <div class="flex items-end justify-between"><div><span class="font-headline-md text-headline-md font-bold text-primary">72%</span><div class="w-24 h-8 mt-2 overflow-hidden"><svg class="w-full h-full stroke-primary fill-none stroke-2" viewBox="0 0 100 30"><polyline points="0,20 20,10 40,15 60,5 80,12 100,8"/></svg></div></div><span class="material-symbols-outlined text-on-surface-variant">done_outline</span></div>
-    </div>
-    <div onclick="nav('location-detail',{id:3})" class="min-w-[280px] flex-shrink-0 bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow">
-      <div class="flex justify-between items-start mb-4"><div><h3 class="font-label-bold text-label-bold text-primary">Grand Central Kitchen</h3><p class="font-label-sm text-label-sm text-on-surface-variant">Last Audit: 12h ago</p></div><span class="bg-surface-container text-on-surface-variant text-[10px] font-bold px-2 py-1 rounded">0 CRITICAL</span></div>
-      <div class="flex items-end justify-between"><div><span class="font-headline-md text-headline-md font-bold text-secondary">98%</span><div class="w-24 h-8 mt-2 overflow-hidden"><svg class="w-full h-full stroke-secondary fill-none stroke-2" viewBox="0 0 100 30"><polyline points="0,15 20,5 40,8 60,2 80,5 100,3"/></svg></div></div><span class="material-symbols-outlined text-secondary">check_circle</span></div>
-    </div>
-  </div>
-</section>
-
-<section class="px-margin-page mb-stack-lg grid grid-cols-1 lg:grid-cols-2 gap-gutter-grid">
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl">
-    <h3 class="font-label-bold text-label-bold text-primary mb-4 uppercase">Compliance Trend</h3>
-    <div class="h-48 flex items-end justify-between gap-1">
-      <div class="bg-primary/10 w-full rounded-t-sm h-[60%] hover:bg-primary transition-colors cursor-pointer"></div>
-      <div class="bg-primary/10 w-full rounded-t-sm h-[75%] hover:bg-primary transition-colors cursor-pointer"></div>
-      <div class="bg-primary/10 w-full rounded-t-sm h-[85%] hover:bg-primary transition-colors cursor-pointer"></div>
-      <div class="bg-primary/10 w-full rounded-t-sm h-[70%] hover:bg-primary transition-colors cursor-pointer"></div>
-      <div class="bg-primary/10 w-full rounded-t-sm h-[90%] hover:bg-primary transition-colors cursor-pointer"></div>
-      <div class="bg-primary/20 w-full rounded-t-sm h-[94%] hover:bg-primary transition-colors cursor-pointer"></div>
-      <div class="bg-primary w-full rounded-t-sm h-[96%]"></div>
-    </div>
-    <div class="flex justify-between mt-2 text-[10px] font-bold text-outline uppercase">
-      <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-    </div>
-  </div>
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl">
-    <h3 class="font-label-bold text-label-bold text-primary mb-4 uppercase">Risk Density Heatmap</h3>
-    <div class="grid grid-cols-7 gap-1" id="heatmap"></div>
-    <div class="flex justify-between mt-4">
-      <div class="space-y-2 w-full">
-        <div class="flex justify-between items-center text-label-sm font-label-sm"><span>Food Storage</span><span class="font-bold">42%</span></div>
-        <div class="w-full bg-surface-container h-1 rounded-full overflow-hidden"><div class="bg-error w-[42%] h-full"></div></div>
-        <div class="flex justify-between items-center text-label-sm font-label-sm mt-2"><span>Hygiene</span><span class="font-bold">28%</span></div>
-        <div class="w-full bg-surface-container h-1 rounded-full overflow-hidden"><div class="bg-primary w-[28%] h-full"></div></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="px-margin-page grid grid-cols-1 lg:grid-cols-2 gap-gutter-grid mb-stack-lg">
-  <div>
-    <h2 class="font-headline-sm text-headline-sm text-primary mb-4">Critical Alerts</h2>
-    <div class="space-y-3">
-      <div onclick="nav('violation-detail',{id:1})" class="flex items-center gap-4 bg-error-container/20 border-l-4 border-error p-3 rounded-r-lg cursor-pointer hover:bg-error-container/30">
-        <span class="material-symbols-outlined text-error">emergency</span>
-        <div class="flex-1"><div class="font-label-bold text-label-bold text-primary">Failed Inspection: Savory Bistro</div><p class="text-[11px] text-on-surface-variant">Immediate attention required - Health Safety</p></div>
-        <button onclick="event.stopPropagation()" class="text-error font-bold text-[11px] uppercase">Resolve</button>
-      </div>
-      <div onclick="nav('violation-detail',{id:2})" class="flex items-center gap-4 bg-surface-container-lowest border border-outline-variant p-3 rounded-lg cursor-pointer hover:shadow-sm">
-        <span class="material-symbols-outlined text-on-surface-variant">thermostat</span>
-        <div class="flex-1"><div class="font-label-bold text-label-bold text-primary">Critical Violation: Temp Alert #402</div><p class="text-[11px] text-on-surface-variant">Main Walk-in: 48°F (Threshold 40°F)</p></div>
-        <span class="text-outline font-bold text-[10px]">12m ago</span>
-      </div>
-    </div>
-  </div>
-  <div>
-    <h2 class="font-headline-sm text-headline-sm text-primary mb-4">Recent Activity</h2>
-    <div class="space-y-2">
-      <div class="flex items-center justify-between text-body-md font-body-md border-b border-outline-variant pb-2"><span class="text-on-surface-variant">Inspection Completed - Broadway</span><span class="font-bold text-primary">1h ago</span></div>
-      <div class="flex items-center justify-between text-body-md font-body-md border-b border-outline-variant pb-2"><span class="text-on-surface-variant">Risk Resolved - Mike R.</span><span class="font-bold text-primary">3h ago</span></div>
-      <div class="flex items-center justify-between text-body-md font-body-md border-b border-outline-variant pb-2"><span class="text-error">Audit Failed - North End</span><span class="font-bold text-error">Yesterday</span></div>
-      <div class="flex items-center justify-between text-body-md font-body-md border-b border-outline-variant pb-2"><span class="text-on-surface-variant">New Inspection Started</span><span class="font-bold text-primary">2d ago</span></div>
-    </div>
-  </div>
-</section>
-
-<section class="px-margin-page flex flex-col gap-3 lg:flex-row lg:items-center pb-stack-lg">
-  <button onclick="nav('reports')" class="flex-1 py-3 bg-primary text-on-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95 transition-transform"><span class="material-symbols-outlined">summarize</span>VIEW FULL REPORTS</button>
-  <button onclick="nav('alerts')" class="flex-1 py-3 bg-surface-container-lowest border border-primary text-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95 transition-transform"><span class="material-symbols-outlined">report_problem</span>OPEN RISKS (12)</button>
-</section>
 </div>
 
-<!-- ─────────────────────────────────────────
-     S2 · Inspections List
-───────────────────────────────────────── -->
 <div id="screen-inspections" class="screen">
-<section class="p-margin-page space-y-stack-md">
-  <div class="flex gap-3">
-    <div class="flex-1 flex items-center gap-2 bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-2.5">
-      <span class="material-symbols-outlined text-outline" style="font-size:20px">search</span>
-      <input type="text" placeholder="Search inspections…" class="flex-1 border-none outline-none text-body-md bg-transparent"/>
+  <div class="topbar">
+    <div class="crumb"><h2>All Inspections</h2><div class="sub"><b>West Coast Region</b> · 47 total</div></div>
+    <div class="topbar-ctrl">
+      <button class="btn-primary" onclick="nav('new-inspection')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Inspection
+      </button>
     </div>
-    <button class="flex items-center gap-1.5 bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-2.5 font-label-bold text-label-bold text-on-surface-variant">
-      <span class="material-symbols-outlined text-outline" style="font-size:18px">filter_list</span>Filter
-    </button>
   </div>
-  <div class="flex gap-2 overflow-x-auto hide-scrollbar">
-    <span class="bg-primary-container text-on-primary-container text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap">All</span>
-    <span class="bg-surface-container text-on-surface-variant text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap cursor-pointer hover:bg-surface-container-high">In Progress</span>
-    <span class="bg-surface-container text-on-surface-variant text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap cursor-pointer hover:bg-surface-container-high">Completed</span>
-    <span class="bg-surface-container text-on-surface-variant text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap cursor-pointer hover:bg-surface-container-high">Failed</span>
-    <span class="bg-surface-container text-on-surface-variant text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap cursor-pointer hover:bg-surface-container-high">This Week</span>
-  </div>
-  <div class="space-y-2" id="inspections-list"></div>
-  <button onclick="nav('new-inspection')" class="w-full py-3 bg-primary text-on-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95 transition-transform mt-2"><span class="material-symbols-outlined">add</span>START NEW INSPECTION</button>
-</section>
+  <div class="content" id="inspections-content"></div>
 </div>
 
-<!-- ─────────────────────────────────────────
-     S3 · Reports
-───────────────────────────────────────── -->
 <div id="screen-reports" class="screen">
-<section class="p-margin-page space-y-stack-md">
-  <div class="flex gap-2 overflow-x-auto hide-scrollbar">
-    <span class="bg-primary-container text-on-primary-container text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap">This Month</span>
-    <span class="bg-surface-container text-on-surface-variant text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap cursor-pointer">Last 90d</span>
-    <span class="bg-surface-container text-on-surface-variant text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap cursor-pointer">YTD</span>
-    <span class="bg-surface-container text-on-surface-variant text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap cursor-pointer">Custom</span>
-  </div>
-  <div class="grid grid-cols-3 gap-gutter-grid">
-    <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl text-center"><div class="font-display-lg-mobile text-secondary">94.2%</div><div class="font-label-bold text-label-bold text-on-surface-variant uppercase mt-1">Avg Score</div></div>
-    <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl text-center"><div class="font-display-lg-mobile text-primary">47</div><div class="font-label-bold text-label-bold text-on-surface-variant uppercase mt-1">Inspections</div></div>
-    <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl text-center"><div class="font-display-lg-mobile text-error">12</div><div class="font-label-bold text-label-bold text-on-surface-variant uppercase mt-1">Open Risks</div></div>
-  </div>
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl">
-    <h3 class="font-label-bold text-label-bold text-primary uppercase mb-4">Monthly Compliance Trend</h3>
-    <div class="flex items-end justify-between gap-2 h-32">
-      <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-sm bg-secondary/30 hover:bg-secondary transition-colors" style="height:82%"></div><div class="text-[9px] font-bold text-outline">Jan</div></div>
-      <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-sm bg-secondary/30 hover:bg-secondary transition-colors" style="height:78%"></div><div class="text-[9px] font-bold text-outline">Feb</div></div>
-      <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-sm bg-secondary/30 hover:bg-secondary transition-colors" style="height:85%"></div><div class="text-[9px] font-bold text-outline">Mar</div></div>
-      <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-sm bg-secondary/30 hover:bg-secondary transition-colors" style="height:88%"></div><div class="text-[9px] font-bold text-outline">Apr</div></div>
-      <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-sm bg-secondary" style="height:94%"></div><div class="text-[9px] font-bold text-outline">May</div></div>
+  <div class="topbar">
+    <div class="crumb"><h2>Reports</h2><div class="sub"><b>Analytics</b> · West Coast Region</div></div>
+    <div class="topbar-ctrl">
+      <button class="pill-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export PDF
+      </button>
     </div>
   </div>
-  <div>
-    <h2 class="font-headline-sm text-headline-sm text-primary mb-stack-md">At-Risk Locations</h2>
-    <div class="space-y-2">
-      <div onclick="nav('location-detail',{id:1})" class="flex items-center gap-4 bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl cursor-pointer hover:shadow-sm transition-shadow">
-        <div class="font-headline-md text-headline-md font-bold text-error w-14 text-center flex-shrink-0">64%</div>
-        <div class="flex-1 min-w-0"><div class="font-label-bold text-label-bold text-primary">South Station Deli</div><div class="font-label-sm text-label-sm text-on-surface-variant">2 critical violations</div></div>
-        <span class="bg-error-container text-on-error-container text-[10px] font-bold px-2 py-1 rounded">FAIL</span>
-      </div>
-      <div onclick="nav('location-detail',{id:2})" class="flex items-center gap-4 bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl cursor-pointer hover:shadow-sm transition-shadow">
-        <div class="font-headline-md text-headline-md font-bold text-primary w-14 text-center flex-shrink-0">72%</div>
-        <div class="flex-1 min-w-0"><div class="font-label-bold text-label-bold text-primary">Broadway Express</div><div class="font-label-sm text-label-sm text-on-surface-variant">1 critical violation</div></div>
-        <span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-1 rounded">WARN</span>
-      </div>
-    </div>
-  </div>
-  <button class="w-full py-3 bg-surface-container-lowest border border-primary text-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95 transition-transform"><span class="material-symbols-outlined">download</span>EXPORT PDF REPORT</button>
-</section>
+  <div class="content" id="reports-content"></div>
 </div>
 
-<!-- ─────────────────────────────────────────
-     S4 · Settings
-───────────────────────────────────────── -->
 <div id="screen-settings" class="screen">
-<section class="p-margin-page space-y-stack-md max-w-lg">
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl space-y-4">
-    <div class="font-label-bold text-label-bold text-on-surface-variant uppercase">Region</div>
-    <div class="flex justify-between items-center"><div><div class="font-body-md text-body-md font-semibold">Active Region</div><div class="font-label-sm text-label-sm text-on-surface-variant">West Coast</div></div><button class="font-label-bold text-label-bold text-primary">Change</button></div>
-    <div class="flex justify-between items-center"><div><div class="font-body-md text-body-md font-semibold">Time Zone</div><div class="font-label-sm text-label-sm text-on-surface-variant">America/Los_Angeles</div></div><button class="font-label-bold text-label-bold text-primary">Edit</button></div>
-  </div>
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl space-y-4">
-    <div class="font-label-bold text-label-bold text-on-surface-variant uppercase">Notifications</div>
-    <div class="flex items-center justify-between"><div><div class="font-body-md text-body-md font-semibold">Critical Alerts</div><div class="font-label-sm text-label-sm text-on-surface-variant">Push + email for critical violations</div></div><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
-    <div class="flex items-center justify-between"><div><div class="font-body-md text-body-md font-semibold">Inspection Due Reminders</div><div class="font-label-sm text-label-sm text-on-surface-variant">24h before scheduled audit</div></div><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
-    <div class="flex items-center justify-between"><div><div class="font-body-md text-body-md font-semibold">Weekly Summary</div><div class="font-label-sm text-label-sm text-on-surface-variant">Monday morning digest</div></div><label class="toggle"><input type="checkbox"/><span class="toggle-slider"></span></label></div>
-  </div>
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl space-y-4">
-    <div class="font-label-bold text-label-bold text-on-surface-variant uppercase">Inspection Defaults</div>
-    <div class="flex items-center justify-between"><div><div class="font-body-md text-body-md font-semibold">Require Photo Evidence</div><div class="font-label-sm text-label-sm text-on-surface-variant">Mandatory for critical items</div></div><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
-    <div class="flex items-center justify-between"><div><div class="font-body-md text-body-md font-semibold">Auto-save Notes</div><div class="font-label-sm text-label-sm text-on-surface-variant">Save drafts every 30s</div></div><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
-  </div>
-  <button class="w-full py-3 bg-error-container text-on-error-container font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95 transition-transform"><span class="material-symbols-outlined">logout</span>SIGN OUT</button>
-</section>
+  <div class="topbar"><div class="crumb"><h2>Settings</h2><div class="sub">Account &amp; Preferences</div></div></div>
+  <div class="content" id="settings-content"></div>
 </div>
 
-<!-- ─────────────────────────────────────────
-     S5 · New Inspection
-───────────────────────────────────────── -->
 <div id="screen-new-inspection" class="screen">
-<section class="p-margin-page space-y-stack-md max-w-lg">
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl space-y-3">
-    <div class="font-label-bold text-label-bold text-on-surface-variant uppercase">Location</div>
-    <select class="w-full border border-outline-variant rounded-xl px-4 py-3 font-body-md text-body-md bg-surface-container-lowest focus:outline-none focus:border-primary">
-      <option value="">Select a location…</option>
-      <option>South Station Deli</option><option>Broadway Express</option>
-      <option>Grand Central Kitchen</option><option>Harbor View Café</option>
-      <option>Sunset Grille</option><option>The Market Table</option>
-    </select>
+  <div class="topbar">
+    <div class="crumb">
+      <h2>
+        <button onclick="goBack()" style="background:none;border:none;cursor:pointer;color:#6b7280;display:flex;align-items:center;margin-right:4px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        New Inspection
+      </h2>
+      <div class="sub">Select location and type to begin</div>
+    </div>
   </div>
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl space-y-3">
-    <div class="font-label-bold text-label-bold text-on-surface-variant uppercase">Inspection Type</div>
-    <label class="flex items-center gap-3 p-3 border-2 border-primary-container rounded-xl cursor-pointer bg-primary-container/10">
-      <input type="radio" name="itype" value="routine" checked class="accent-primary"/><div><div class="font-body-md text-body-md font-semibold">Routine Audit</div><div class="font-label-sm text-label-sm text-on-surface-variant">Standard full inspection</div></div>
-    </label>
-    <label class="flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer">
-      <input type="radio" name="itype" value="followup" class="accent-primary"/><div><div class="font-body-md text-body-md font-semibold">Follow-Up</div><div class="font-label-sm text-label-sm text-on-surface-variant">Verify remediation of prior violations</div></div>
-    </label>
-    <label class="flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer">
-      <input type="radio" name="itype" value="special" class="accent-primary"/><div><div class="font-body-md text-body-md font-semibold">Special / Incident</div><div class="font-label-sm text-label-sm text-on-surface-variant">Triggered by complaint or incident</div></div>
-    </label>
-  </div>
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl space-y-3">
-    <div class="font-label-bold text-label-bold text-on-surface-variant uppercase">Inspector</div>
-    <select class="w-full border border-outline-variant rounded-xl px-4 py-3 font-body-md text-body-md bg-surface-container-lowest focus:outline-none focus:border-primary">
-      <option>Mike Rodriguez (You)</option><option>Sarah Chen</option><option>James Park</option><option>Lisa Torres</option>
-    </select>
-  </div>
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl space-y-3">
-    <div class="font-label-bold text-label-bold text-on-surface-variant uppercase">Date</div>
-    <input type="date" value="2026-05-18" class="w-full border border-outline-variant rounded-xl px-4 py-3 font-body-md text-body-md bg-surface-container-lowest focus:outline-none focus:border-primary"/>
-  </div>
-  <button onclick="nav('active-inspection')" class="w-full py-4 bg-primary text-on-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95 transition-transform"><span class="material-symbols-outlined">play_arrow</span>START INSPECTION</button>
-</section>
+  <div class="content" id="new-inspection-content"></div>
 </div>
 
-<!-- ─────────────────────────────────────────
-     S6 · Active Inspection
-───────────────────────────────────────── -->
 <div id="screen-active-inspection" class="screen">
-<section class="p-margin-page space-y-stack-md">
-  <div class="bg-primary-container text-on-primary-container p-card-padding rounded-xl flex items-center gap-5">
-    <div class="flex-shrink-0">
-      <svg width="80" height="80" viewBox="0 0 80 80" class="ring-svg">
-        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="8"/>
-        <circle cx="40" cy="40" r="32" fill="none" stroke="#4ae176" stroke-width="8" stroke-dasharray="201" stroke-dashoffset="80" stroke-linecap="round"/>
-      </svg>
+  <div class="topbar">
+    <div class="crumb">
+      <h2>
+        <button onclick="goBack()" style="background:none;border:none;cursor:pointer;color:#6b7280;display:flex;align-items:center;margin-right:4px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        Active Inspection
+      </h2>
+      <div class="sub"><b>Grand Central Kitchen</b> · Routine Audit · Started 9:14 AM</div>
     </div>
-    <div class="flex-1">
-      <div class="font-display-lg-mobile">60%</div>
-      <div class="font-label-bold text-label-bold opacity-80 mt-1">3 of 5 sections complete</div>
-      <div class="font-label-sm text-label-sm opacity-60 mt-1">Grand Central Kitchen · Routine Audit</div>
-    </div>
-    <div class="text-right flex-shrink-0">
-      <div class="font-label-sm text-label-sm opacity-70">Started</div><div class="font-label-bold text-label-bold">9:14 AM</div>
-      <div class="font-label-sm text-label-sm opacity-70 mt-1">Duration</div><div class="font-label-bold text-label-bold">42 min</div>
+    <div class="topbar-ctrl">
+      <button class="btn-outline">Pause</button>
+      <button class="btn-primary" onclick="nav('completed-inspection')">Finish Inspection</button>
     </div>
   </div>
-  <h2 class="font-headline-sm text-headline-sm text-primary">Inspection Sections</h2>
-  <div class="space-y-2" id="sections-list"></div>
-  <div class="flex gap-3">
-    <button class="flex-1 py-3 bg-surface-container-lowest border border-primary text-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95 transition-transform"><span class="material-symbols-outlined">pause</span>PAUSE</button>
-    <button onclick="nav('completed-inspection')" class="flex-1 py-3 bg-primary text-on-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95 transition-transform"><span class="material-symbols-outlined">check_circle</span>FINISH</button>
-  </div>
-</section>
+  <div class="content" id="active-inspection-content"></div>
 </div>
 
-<!-- ─────────────────────────────────────────
-     S7 · Inspection Section
-───────────────────────────────────────── -->
 <div id="screen-inspection-section" class="screen">
-<section class="p-margin-page space-y-stack-md">
-  <div class="flex justify-between items-center">
-    <div><h2 class="font-headline-sm text-headline-sm text-primary">Food Storage</h2><p class="font-label-sm text-label-sm text-on-surface-variant">Grand Central Kitchen</p></div>
-    <span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-1 rounded">4/7 complete</span>
+  <div class="topbar">
+    <div class="crumb">
+      <h2>
+        <button onclick="goBack()" style="background:none;border:none;cursor:pointer;color:#6b7280;display:flex;align-items:center;margin-right:4px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        Food Storage
+      </h2>
+      <div class="sub"><b>Grand Central Kitchen</b> · 4 of 7 items complete</div>
+    </div>
+    <div class="topbar-ctrl">
+      <button class="btn-primary" onclick="nav('active-inspection')">Save Section</button>
+    </div>
   </div>
-  <div class="w-full bg-surface-container h-2 rounded-full overflow-hidden"><div class="bg-secondary h-full rounded-full" style="width:57%"></div></div>
-  <div class="space-y-2" id="section-items-list"></div>
-  <button onclick="nav('active-inspection')" class="w-full py-3 bg-primary text-on-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95 transition-transform"><span class="material-symbols-outlined">check</span>SAVE SECTION</button>
-</section>
+  <div class="content" id="section-content"></div>
 </div>
 
-<!-- ─────────────────────────────────────────
-     S8 · Item Detail
-───────────────────────────────────────── -->
 <div id="screen-item-detail" class="screen">
-<section class="p-margin-page space-y-stack-md max-w-lg">
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl">
-    <span class="bg-error-container text-on-error-container text-[10px] font-bold px-2 py-1 rounded inline-block mb-3">CRITICAL</span>
-    <div class="font-headline-sm text-headline-sm text-primary mb-2">Proper Cold Storage Temperatures</div>
-    <div class="font-body-md text-body-md text-on-surface-variant leading-relaxed">All refrigerated food must be stored at 41°F (5°C) or below. Check thermometer calibration and placement.</div>
-  </div>
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl">
-    <div class="font-label-bold text-label-bold text-on-surface-variant uppercase mb-4">Compliance Status</div>
-    <div class="grid grid-cols-2 gap-3">
-      <button id="btn-pass" onclick="setPassFail('pass')" class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-secondary bg-secondary/10 active:scale-95 transition-all">
-        <span class="material-symbols-outlined text-secondary" style="font-size:32px">check_circle</span>
-        <span class="font-label-bold text-label-bold text-secondary">PASS</span>
-      </button>
-      <button id="btn-fail" onclick="setPassFail('fail')" class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-outline-variant active:scale-95 transition-all hover:border-error">
-        <span class="material-symbols-outlined text-outline" style="font-size:32px">cancel</span>
-        <span class="font-label-bold text-label-bold text-on-surface-variant">FAIL</span>
-      </button>
+  <div class="topbar">
+    <div class="crumb">
+      <h2>
+        <button onclick="goBack()" style="background:none;border:none;cursor:pointer;color:#6b7280;display:flex;align-items:center;margin-right:4px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        Item Detail
+      </h2>
+      <div class="sub">Food Storage · Grand Central Kitchen</div>
+    </div>
+    <div class="topbar-ctrl">
+      <button class="btn-primary" onclick="nav('inspection-section')">Save Item</button>
     </div>
   </div>
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl space-y-3">
-    <div class="font-label-bold text-label-bold text-on-surface-variant uppercase">Inspector Notes</div>
-    <textarea rows="3" placeholder="Add notes about this item…" class="w-full border border-outline-variant rounded-xl p-3 font-body-md text-body-md bg-surface-container-lowest focus:outline-none focus:border-primary resize-none"></textarea>
-  </div>
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl space-y-3">
-    <div class="font-label-bold text-label-bold text-on-surface-variant uppercase">Evidence</div>
-    <div class="grid grid-cols-2 gap-3">
-      <button onclick="nav('photo-capture')" class="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-outline-variant rounded-xl hover:border-primary transition-colors active:scale-95">
-        <span class="material-symbols-outlined text-outline" style="font-size:28px">photo_camera</span>
-        <span class="font-label-bold text-label-bold text-on-surface-variant">Add Photo</span>
-      </button>
-      <button onclick="nav('voice-notes')" class="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-outline-variant rounded-xl hover:border-primary transition-colors active:scale-95">
-        <span class="material-symbols-outlined text-outline" style="font-size:28px">mic</span>
-        <span class="font-label-bold text-label-bold text-on-surface-variant">Voice Note</span>
-      </button>
-    </div>
-  </div>
-  <button onclick="nav('inspection-section')" class="w-full py-3 bg-primary text-on-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95 transition-transform"><span class="material-symbols-outlined">save</span>SAVE ITEM</button>
-</section>
+  <div class="content" id="item-detail-content"></div>
 </div>
 
-<!-- ─────────────────────────────────────────
-     S9 · Completed Inspection
-───────────────────────────────────────── -->
 <div id="screen-completed-inspection" class="screen">
-<section class="p-margin-page space-y-stack-md max-w-xl">
-  <div class="bg-secondary text-on-secondary p-card-padding rounded-xl text-center py-8">
-    <div class="font-display-lg text-on-secondary" style="font-size:64px;line-height:1">92</div>
-    <div class="font-headline-sm text-on-secondary mt-1">PASS</div>
-    <div class="font-body-md text-on-secondary opacity-80 mt-2">Grand Central Kitchen · Routine Audit</div>
-    <div class="font-label-sm text-on-secondary opacity-70 mt-1">May 18, 2026 · Mike Rodriguez</div>
-  </div>
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl space-y-3">
-    <div class="font-label-bold text-label-bold text-on-surface-variant uppercase mb-2">Section Scores</div>
-    <div class="flex justify-between items-center"><span class="font-body-md text-body-md">Food Storage</span><span class="font-label-bold text-label-bold text-secondary">100%</span></div>
-    <div class="flex justify-between items-center"><span class="font-body-md text-body-md">Personal Hygiene</span><span class="font-label-bold text-label-bold text-secondary">95%</span></div>
-    <div class="flex justify-between items-center"><span class="font-body-md text-body-md">Equipment Sanitation</span><span class="font-label-bold text-label-bold text-primary">80%</span></div>
-    <div class="flex justify-between items-center"><span class="font-body-md text-body-md">Pest Control</span><span class="font-label-bold text-label-bold text-secondary">100%</span></div>
-    <div class="flex justify-between items-center"><span class="font-body-md text-body-md">Documentation</span><span class="font-label-bold text-label-bold text-secondary">90%</span></div>
-  </div>
-  <div>
-    <h2 class="font-headline-sm text-headline-sm text-primary mb-stack-md">Violations Found (2)</h2>
-    <div class="space-y-2">
-      <div onclick="nav('violation-detail',{id:4})" class="flex items-start gap-3 bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl cursor-pointer hover:shadow-sm">
-        <span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-1 rounded mt-0.5 flex-shrink-0">MEDIUM</span>
-        <div><div class="font-label-bold text-label-bold text-primary">Sanitizer concentration below standard</div><div class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">Equipment Sanitation · Item #3</div></div>
-      </div>
-      <div onclick="nav('violation-detail',{id:5})" class="flex items-start gap-3 bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl cursor-pointer hover:shadow-sm">
-        <span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-1 rounded mt-0.5 flex-shrink-0">MEDIUM</span>
-        <div><div class="font-label-bold text-label-bold text-primary">Incomplete temperature log — 3 entries missing</div><div class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">Documentation · Item #2</div></div>
-      </div>
+  <div class="topbar">
+    <div class="crumb">
+      <h2>
+        <button onclick="goBack()" style="background:none;border:none;cursor:pointer;color:#6b7280;display:flex;align-items:center;margin-right:4px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        Inspection Report
+      </h2>
+      <div class="sub"><b>Grand Central Kitchen</b> · Routine Audit · May 18, 2026</div>
+    </div>
+    <div class="topbar-ctrl">
+      <button class="pill-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export PDF
+      </button>
+      <button class="btn-primary" onclick="nav('inspections')">Submit Report</button>
     </div>
   </div>
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl space-y-3">
-    <div class="font-label-bold text-label-bold text-on-surface-variant uppercase">Inspector Sign-off</div>
-    <div class="h-20 border-2 border-dashed border-outline-variant rounded-xl flex items-center justify-center font-body-md text-on-surface-variant">Tap to sign</div>
-  </div>
-  <div class="flex gap-3">
-    <button onclick="nav('inspections')" class="flex-1 py-3 bg-primary text-on-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95 transition-transform"><span class="material-symbols-outlined">check_circle</span>SUBMIT</button>
-    <button class="flex-1 py-3 bg-surface-container-lowest border border-primary text-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95 transition-transform"><span class="material-symbols-outlined">download</span>PDF</button>
-  </div>
-</section>
+  <div class="content" id="completed-content"></div>
 </div>
 
-<!-- ─────────────────────────────────────────
-     S10 · Locations List
-───────────────────────────────────────── -->
 <div id="screen-locations" class="screen">
-<section class="p-margin-page space-y-stack-md">
-  <div class="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-2.5">
-    <span class="material-symbols-outlined text-outline" style="font-size:20px">search</span>
-    <input type="text" placeholder="Search locations…" class="flex-1 border-none outline-none font-body-md text-body-md bg-transparent"/>
-  </div>
-  <div class="space-y-2" id="locations-list"></div>
-</section>
+  <div class="topbar"><div class="crumb"><h2>Locations</h2><div class="sub">West Coast Region · 6 locations</div></div></div>
+  <div class="content" id="locations-content"></div>
 </div>
 
-<!-- ─────────────────────────────────────────
-     S11 · Location Detail
-───────────────────────────────────────── -->
 <div id="screen-location-detail" class="screen">
-<section class="p-margin-page space-y-stack-md" id="location-detail-content"></section>
+  <div class="topbar">
+    <div class="crumb">
+      <h2>
+        <button onclick="goBack()" style="background:none;border:none;cursor:pointer;color:#6b7280;display:flex;align-items:center;margin-right:4px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <span id="loc-detail-title">Location</span>
+      </h2>
+      <div class="sub">West Coast Region</div>
+    </div>
+    <div class="topbar-ctrl">
+      <button class="btn-primary" onclick="nav('new-inspection')">Start Inspection</button>
+    </div>
+  </div>
+  <div class="content" id="location-detail-content"></div>
 </div>
 
-<!-- ─────────────────────────────────────────
-     S12 · Critical Alerts
-───────────────────────────────────────── -->
 <div id="screen-alerts" class="screen">
-<section class="p-margin-page space-y-stack-md">
-  <div class="flex gap-2 overflow-x-auto hide-scrollbar">
-    <span class="bg-primary-container text-on-primary-container text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap">All (7)</span>
-    <span class="bg-error-container text-on-error-container text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap cursor-pointer">Active (3)</span>
-    <span class="bg-surface-container text-on-surface-variant text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap cursor-pointer">Resolved (4)</span>
-  </div>
-  <div class="space-y-3" id="alerts-list"></div>
-</section>
+  <div class="topbar"><div class="crumb"><h2>Critical Alerts</h2><div class="sub">3 active · 4 resolved</div></div></div>
+  <div class="content" id="alerts-content"></div>
 </div>
 
-<!-- ─────────────────────────────────────────
-     S13 · Violation Detail
-───────────────────────────────────────── -->
 <div id="screen-violation-detail" class="screen">
-<section class="p-margin-page space-y-stack-md max-w-lg" id="violation-detail-content"></section>
+  <div class="topbar">
+    <div class="crumb">
+      <h2>
+        <button onclick="goBack()" style="background:none;border:none;cursor:pointer;color:#6b7280;display:flex;align-items:center;margin-right:4px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        Violation Detail
+      </h2>
+      <div class="sub">Incident report</div>
+    </div>
+  </div>
+  <div class="content" id="violation-detail-content"></div>
 </div>
 
-<!-- ─────────────────────────────────────────
-     S14 · Photo Capture
-───────────────────────────────────────── -->
 <div id="screen-photo-capture" class="screen">
-<section class="p-margin-page space-y-stack-md max-w-lg">
-  <div class="bg-inverse-surface rounded-xl aspect-[4/3] flex flex-col items-center justify-center gap-3">
-    <span class="material-symbols-outlined text-inverse-on-surface" style="font-size:56px">photo_camera</span>
-    <div class="text-inverse-on-surface font-body-md opacity-70">Camera preview</div>
+  <div class="topbar">
+    <div class="crumb">
+      <h2>
+        <button onclick="goBack()" style="background:none;border:none;cursor:pointer;color:#6b7280;display:flex;align-items:center;margin-right:4px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        Photo Evidence
+      </h2>
+    </div>
+    <div class="topbar-ctrl"><button class="btn-primary" onclick="goBack()">Done</button></div>
   </div>
-  <div class="flex gap-3">
-    <button class="flex-1 py-3 bg-primary text-on-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95"><span class="material-symbols-outlined">camera</span>CAPTURE</button>
-    <button class="flex-1 py-3 bg-surface-container-lowest border border-primary text-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95"><span class="material-symbols-outlined">upload</span>UPLOAD</button>
-  </div>
-  <div class="font-headline-sm text-headline-sm text-primary">Recent Photos (3)</div>
-  <div class="grid grid-cols-3 gap-2">
-    <div class="aspect-square bg-surface-container rounded-xl flex items-center justify-center"><span class="material-symbols-outlined text-outline">image</span></div>
-    <div class="aspect-square bg-surface-container rounded-xl flex items-center justify-center"><span class="material-symbols-outlined text-outline">image</span></div>
-    <div class="aspect-square bg-surface-container-high rounded-xl flex items-center justify-center"><span class="material-symbols-outlined text-outline">image</span></div>
-  </div>
-  <button onclick="nav('item-detail')" class="w-full py-3 bg-surface-container-lowest border border-primary text-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95 transition-transform"><span class="material-symbols-outlined">check</span>DONE</button>
-</section>
+  <div class="content" id="photo-content"></div>
 </div>
 
-<!-- ─────────────────────────────────────────
-     S15 · Voice Notes
-───────────────────────────────────────── -->
 <div id="screen-voice-notes" class="screen">
-<section class="p-margin-page space-y-stack-lg max-w-lg">
-  <div class="flex flex-col items-center gap-4 py-6">
-    <button id="record-btn" onclick="toggleRecord()" class="w-24 h-24 rounded-full bg-primary-container flex items-center justify-center hover:opacity-80 transition-all active:scale-95">
-      <span class="material-symbols-outlined text-on-primary-container" style="font-size:40px">mic</span>
-    </button>
-    <div id="record-status" class="font-label-bold text-label-bold text-on-surface-variant">Tap to record</div>
-    <div class="flex items-center gap-1 h-10"><div id="wave" class="flex items-center gap-0.5"></div></div>
-  </div>
-  <div class="font-headline-sm text-headline-sm text-primary">Saved Recordings</div>
-  <div class="space-y-2">
-    <div class="flex items-center gap-3 bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl">
-      <button class="w-10 h-10 rounded-full bg-primary-container flex-shrink-0 flex items-center justify-center active:scale-95"><span class="material-symbols-outlined text-on-primary-container" style="font-size:20px">play_arrow</span></button>
-      <div class="flex-1 min-w-0"><div class="font-label-bold text-label-bold">Note #1</div><div class="font-label-sm text-label-sm text-on-surface-variant">0:14 · Today 9:22 AM</div></div>
-      <button class="p-2 active:scale-95"><span class="material-symbols-outlined text-error" style="font-size:18px">delete</span></button>
+  <div class="topbar">
+    <div class="crumb">
+      <h2>
+        <button onclick="goBack()" style="background:none;border:none;cursor:pointer;color:#6b7280;display:flex;align-items:center;margin-right:4px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        Voice Notes
+      </h2>
     </div>
-    <div class="flex items-center gap-3 bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl">
-      <button class="w-10 h-10 rounded-full bg-primary-container flex-shrink-0 flex items-center justify-center active:scale-95"><span class="material-symbols-outlined text-on-primary-container" style="font-size:20px">play_arrow</span></button>
-      <div class="flex-1 min-w-0"><div class="font-label-bold text-label-bold">Note #2 — Temp reading</div><div class="font-label-sm text-label-sm text-on-surface-variant">0:28 · Today 9:30 AM</div></div>
-      <button class="p-2 active:scale-95"><span class="material-symbols-outlined text-error" style="font-size:18px">delete</span></button>
-    </div>
+    <div class="topbar-ctrl"><button class="btn-primary" onclick="goBack()">Done</button></div>
   </div>
-  <button onclick="nav('item-detail')" class="w-full py-3 bg-primary text-on-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95 transition-transform"><span class="material-symbols-outlined">check</span>DONE</button>
-</section>
+  <div class="content" id="voice-content"></div>
 </div>
 
-<!-- ─────────────────────────────────────────
-     S16 · Profile
-───────────────────────────────────────── -->
 <div id="screen-profile" class="screen">
-<section class="p-margin-page space-y-stack-md max-w-lg">
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl flex items-center gap-4">
-    <div class="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center text-[22px] font-bold text-on-primary-container flex-shrink-0">MR</div>
-    <div>
-      <div class="font-headline-sm text-headline-sm text-primary">Mike Rodriguez</div>
-      <div class="font-body-md text-body-md text-on-surface-variant">Senior Inspector</div>
-      <span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-1 rounded mt-1 inline-block">West Coast</span>
-    </div>
-  </div>
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl space-y-3">
-    <div class="font-label-bold text-label-bold text-on-surface-variant uppercase">Assigned Locations</div>
-    <div class="flex justify-between items-center"><span class="font-body-md text-body-md">South Station Deli</span><span class="bg-error-container text-on-error-container text-[10px] font-bold px-2 py-1 rounded">CRITICAL</span></div>
-    <div class="flex justify-between items-center"><span class="font-body-md text-body-md">Broadway Express</span><span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-1 rounded">WARN</span></div>
-    <div class="flex justify-between items-center"><span class="font-body-md text-body-md">Grand Central Kitchen</span><span class="bg-surface-container text-on-surface-variant text-[10px] font-bold px-2 py-1 rounded">PASS</span></div>
-    <div class="flex justify-between items-center"><span class="font-body-md text-body-md">Harbor View Café</span><span class="bg-surface-container text-on-surface-variant text-[10px] font-bold px-2 py-1 rounded">PASS</span></div>
-  </div>
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl">
-    <div class="font-label-bold text-label-bold text-on-surface-variant uppercase mb-3">This Month</div>
-    <div class="grid grid-cols-3 gap-3 text-center">
-      <div><div class="font-display-lg-mobile text-primary">14</div><div class="font-label-bold text-label-bold text-on-surface-variant uppercase">Audits</div></div>
-      <div><div class="font-display-lg-mobile text-error">3</div><div class="font-label-bold text-label-bold text-on-surface-variant uppercase">Failed</div></div>
-      <div><div class="font-display-lg-mobile text-secondary">94%</div><div class="font-label-bold text-label-bold text-on-surface-variant uppercase">Avg Score</div></div>
-    </div>
-  </div>
-  <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl space-y-2">
-    <div class="font-label-bold text-label-bold text-on-surface-variant uppercase">Contact</div>
-    <div class="flex justify-between font-body-md text-body-md"><span class="text-on-surface-variant">Email</span><span>mike.r@rrmco.com</span></div>
-    <div class="flex justify-between font-body-md text-body-md"><span class="text-on-surface-variant">Phone</span><span>(415) 555-0142</span></div>
-    <div class="flex justify-between font-body-md text-body-md"><span class="text-on-surface-variant">License</span><span>CA-FSI-48821</span></div>
-  </div>
-  <div class="flex gap-3">
-    <button onclick="nav('settings')" class="flex-1 py-3 bg-surface-container-lowest border border-primary text-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95"><span class="material-symbols-outlined">settings</span>SETTINGS</button>
-    <button class="flex-1 py-3 bg-error-container text-on-error-container font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95"><span class="material-symbols-outlined">logout</span>SIGN OUT</button>
-  </div>
-</section>
+  <div class="topbar"><div class="crumb"><h2>Profile</h2><div class="sub">Mike Rodriguez · Senior Inspector</div></div></div>
+  <div class="content" id="profile-content"></div>
 </div>
 
-</main>
+</div><!-- end .main -->
+</div><!-- end .app -->
 
-<!-- ═══════════════════════════════════════════
-     MOBILE BOTTOM NAV
-═══════════════════════════════════════════ -->
-<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-surface border-t border-outline-variant lg:hidden" id="bottom-nav">
-  <a class="mob-nav flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-5 py-1 transition-all cursor-pointer" data-screen="inspections" onclick="nav('inspections')">
-    <span class="material-symbols-outlined">assignment</span><span class="font-label-sm text-label-sm">Inspections</span>
+<!-- ═══════════ MOBILE NAV ═══════════ -->
+<nav class="mob-nav">
+  <a class="active" onclick="nav('dashboard')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Home
   </a>
-  <a class="mob-nav flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-container transition-all cursor-pointer" data-screen="new-inspection" onclick="nav('new-inspection')">
-    <span class="material-symbols-outlined">add_alert</span><span class="font-label-sm text-label-sm">New Risk</span>
+  <a onclick="nav('inspections')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    Inspections
   </a>
-  <a class="mob-nav flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-container transition-all cursor-pointer" data-screen="reports" onclick="nav('reports')">
-    <span class="material-symbols-outlined">bar_chart</span><span class="font-label-sm text-label-sm">Reports</span>
+  <a onclick="nav('new-inspection')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    New
   </a>
-  <a class="mob-nav flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-container transition-all cursor-pointer" data-screen="settings" onclick="nav('settings')">
-    <span class="material-symbols-outlined">settings</span><span class="font-label-sm text-label-sm">Settings</span>
+  <a onclick="nav('reports')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Reports
+  </a>
+  <a onclick="nav('settings')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+    Settings
   </a>
 </nav>
 
-<!-- ═══════════════════════════════════════════
-     JS
-═══════════════════════════════════════════ -->
+<!-- ═══════════ NAVIGATION JS ═══════════ -->
 <script>
-// ── DATA ─────────────────────────────────────
-const LOCATIONS=[
-  {id:1,name:"South Station Deli",score:64,lastAudit:"2d ago",criticals:2,address:"142 South Station Blvd, SF CA"},
-  {id:2,name:"Broadway Express",score:72,lastAudit:"5h ago",criticals:1,address:"88 Broadway Ave, SF CA"},
-  {id:3,name:"Grand Central Kitchen",score:98,lastAudit:"12h ago",criticals:0,address:"1 Grand Central Plaza, Oakland CA"},
-  {id:4,name:"Harbor View Café",score:86,lastAudit:"1d ago",criticals:0,address:"500 Harbor Dr, San Jose CA"},
-  {id:5,name:"Sunset Grille",score:91,lastAudit:"3d ago",criticals:0,address:"2200 Sunset Blvd, Los Angeles CA"},
-  {id:6,name:"The Market Table",score:79,lastAudit:"5d ago",criticals:0,address:"600 Market St, Portland OR"},
-];
-const INSPECTIONS=[
-  {id:1,location:"South Station Deli",inspector:"Mike Rodriguez",date:"May 16, 2026",score:64,status:"failed",type:"Routine"},
-  {id:2,location:"Grand Central Kitchen",inspector:"Sarah Chen",date:"May 18, 2026",score:98,status:"passed",type:"Routine"},
-  {id:3,location:"Broadway Express",inspector:"Mike Rodriguez",date:"May 17, 2026",score:72,status:"passed",type:"Follow-Up"},
-  {id:4,location:"Harbor View Café",inspector:"James Park",date:"May 17, 2026",score:86,status:"passed",type:"Routine"},
-  {id:5,location:"Sunset Grille",inspector:"Lisa Torres",date:"May 15, 2026",score:91,status:"passed",type:"Routine"},
-  {id:6,location:"The Market Table",inspector:"Mike Rodriguez",date:"May 13, 2026",score:79,status:"passed",type:"Routine"},
-];
-const SECTIONS=[
-  {id:1,name:"Food Storage",items:7,done:4,score:null,status:"in-progress"},
-  {id:2,name:"Personal Hygiene",items:6,done:6,score:95,status:"complete"},
-  {id:3,name:"Equipment Sanitation",items:8,done:8,score:80,status:"complete"},
-  {id:4,name:"Pest Control",items:4,done:4,score:100,status:"complete"},
-  {id:5,name:"Documentation",items:5,done:0,score:null,status:"pending"},
-];
-const SECTION_ITEMS=[
-  {id:1,label:"Proper cold storage temperatures (≤41°F)",critical:true,status:"pass"},
-  {id:2,label:"Raw meats stored below ready-to-eat foods",critical:true,status:"pass"},
-  {id:3,label:"All containers labeled and dated",critical:false,status:"fail"},
-  {id:4,label:"FIFO rotation in place",critical:false,status:"pass"},
-  {id:5,label:"No expired products on shelf",critical:true,status:null},
-  {id:6,label:"Walk-in cooler door seals intact",critical:false,status:null},
-  {id:7,label:"Temperature logs up to date",critical:false,status:null},
-];
-const ALERTS=[
-  {id:1,severity:"critical",title:"Failed Inspection: Savory Bistro",desc:"Overall score 58% — Immediate attention required",location:"South Station Deli",time:"12m ago",resolved:false},
-  {id:2,severity:"critical",title:"Temp Alert #402 — Main Walk-in",desc:"Temperature reading 48°F; threshold is 40°F",location:"Broadway Express",time:"34m ago",resolved:false},
-  {id:3,severity:"critical",title:"Overdue Deep Clean — North End",desc:"Scheduled sanitization 4 days past due",location:"South Station Deli",time:"4d ago",resolved:false},
-  {id:4,severity:"medium",title:"Incomplete Temperature Log",desc:"3 entries missing from weekly log",location:"Grand Central Kitchen",time:"2d ago",resolved:true},
-  {id:5,severity:"medium",title:"Sanitizer Concentration Low",desc:"Measured at 150ppm; min standard is 200ppm",location:"Harbor View Café",time:"3d ago",resolved:true},
-  {id:6,severity:"medium",title:"Pest Trap Not Replaced",desc:"Monthly replacement overdue by 8 days",location:"Sunset Grille",time:"1d ago",resolved:false},
-  {id:7,severity:"low",title:"Handwashing Log Incomplete",desc:"2 missing signatures from evening shift",location:"Broadway Express",time:"5d ago",resolved:true},
-];
-const VIOLATIONS={
-  1:{title:"Failed Inspection: Savory Bistro",severity:"critical",location:"South Station Deli",date:"May 18, 2026",inspector:"Mike Rodriguez",desc:"Overall inspection score of 58% — below the 70% passing threshold.",remediation:"Schedule immediate follow-up. All critical items must be resolved within 48 hours.",status:"open"},
-  2:{title:"Walk-in Temperature Violation #402",severity:"critical",location:"Broadway Express",date:"May 18, 2026",inspector:"Sarah Chen",desc:"Walk-in cooler reading 48°F. FDA standard requires ≤41°F for all refrigerated foods.",remediation:"Service refrigeration unit immediately. Discard any food held >4h above temp.",status:"open"},
-  3:{title:"Sanitation Overdue — North End",severity:"medium",location:"South Station Deli",date:"May 14, 2026",inspector:"Mike Rodriguez",desc:"Deep clean of prep surfaces and hood units is 4 days past scheduled date.",remediation:"Schedule and complete deep clean within 24 hours. Document with photo evidence.",status:"open"},
-  4:{title:"Sanitizer Concentration Below Standard",severity:"medium",location:"Grand Central Kitchen",date:"May 18, 2026",inspector:"Mike Rodriguez",desc:"Active sanitizer solution measured at 150ppm chlorine. Minimum required is 200ppm.",remediation:"Prepare fresh sanitizer solution and retest before continuing food prep.",status:"pending"},
-  5:{title:"Incomplete Temperature Log",severity:"low",location:"Grand Central Kitchen",date:"May 18, 2026",inspector:"Mike Rodriguez",desc:"Weekly temperature log missing 3 entries from Tuesday and Wednesday AM checks.",remediation:"Complete missing entries if data available from automated sensors.",status:"pending"},
+const BACK={
+  'new-inspection':'inspections','active-inspection':'inspections',
+  'inspection-section':'active-inspection','item-detail':'inspection-section',
+  'completed-inspection':'inspections','location-detail':'locations',
+  'violation-detail':'alerts','photo-capture':'item-detail','voice-notes':'item-detail',
 };
-
-// ── NAVIGATION ────────────────────────────────
-const backScreens={
-  'active-inspection':'inspections','inspection-section':'active-inspection',
-  'item-detail':'inspection-section','completed-inspection':'inspections',
-  'location-detail':'locations','violation-detail':'alerts',
-  'photo-capture':'item-detail','voice-notes':'item-detail',
+const TITLES={
+  'dashboard':'Dashboard','inspections':'All Inspections','reports':'Reports',
+  'settings':'Settings','new-inspection':'New Inspection','active-inspection':'Active Inspection',
+  'inspection-section':'Food Storage','item-detail':'Item Detail',
+  'completed-inspection':'Inspection Report','locations':'Locations',
+  'location-detail':'Location Detail','alerts':'Critical Alerts',
+  'violation-detail':'Violation Detail','photo-capture':'Photo Evidence',
+  'voice-notes':'Voice Notes','profile':'Profile',
 };
-const headerCfg={
-  'dashboard':{region:'REGION',title:'West Coast Region',chevron:true,back:false},
-  'inspections':{region:'INSPECTIONS',title:'All Inspections',chevron:false,back:false},
-  'reports':{region:'ANALYTICS',title:'Reports',chevron:false,back:false},
-  'settings':{region:'ACCOUNT',title:'Settings',chevron:false,back:false},
-  'new-inspection':{region:'INSPECTIONS',title:'New Inspection',chevron:false,back:true},
-  'active-inspection':{region:'INSPECTION',title:'Active Inspection',chevron:false,back:true},
-  'inspection-section':{region:'INSPECTION',title:'Food Storage',chevron:false,back:true},
-  'item-detail':{region:'INSPECTION',title:'Item Detail',chevron:false,back:true},
-  'completed-inspection':{region:'INSPECTION',title:'Inspection Report',chevron:false,back:true},
-  'locations':{region:'LOCATIONS',title:'Locations',chevron:false,back:false},
-  'location-detail':{region:'LOCATIONS',title:'Location',chevron:false,back:true},
-  'alerts':{region:'ALERTS',title:'Critical Alerts',chevron:false,back:false},
-  'violation-detail':{region:'ALERTS',title:'Violation Detail',chevron:false,back:true},
-  'photo-capture':{region:'EVIDENCE',title:'Photo Capture',chevron:false,back:true},
-  'voice-notes':{region:'EVIDENCE',title:'Voice Notes',chevron:false,back:true},
-  'profile':{region:'ACCOUNT',title:'Profile',chevron:false,back:false},
+const SUBS={
+  'dashboard':'West Coast Region','inspections':'West Coast Region',
+  'reports':'Analytics','settings':'Account',
+  'new-inspection':'Select location to begin','active-inspection':'Grand Central Kitchen',
+  'inspection-section':'Food Storage · 4 of 7 complete',
+  'item-detail':'Food Storage · Grand Central Kitchen',
+  'completed-inspection':'Grand Central Kitchen · May 18, 2026',
+  'locations':'West Coast Region','location-detail':'West Coast Region',
+  'alerts':'3 active alerts','violation-detail':'Incident detail',
+  'photo-capture':'Attach evidence','voice-notes':'Record annotation',
+  'profile':'Senior Inspector',
 };
+const TOP_NAV=['dashboard','inspections','reports','settings','locations','alerts','profile'];
 
 function nav(screenId, ctx={}) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   const el=document.getElementById('screen-'+screenId);
-  if(!el) return;
+  if(!el){console.warn('Screen not found:',screenId);return;}
   el.classList.add('active');
 
-  // Header
-  const cfg=headerCfg[screenId]||{region:'RMMInspector',title:screenId,chevron:false,back:false};
-  document.getElementById('header-region').textContent=cfg.region;
-  document.getElementById('header-title').textContent=cfg.title;
-  document.getElementById('header-chevron').style.display=cfg.chevron?'inline':'none';
-  document.getElementById('back-btn').style.display=cfg.back?'block':'none';
-  document.getElementById('menu-btn').style.display=cfg.back?'none':'block';
-
-  // Desktop nav active
-  document.querySelectorAll('.desk-nav').forEach(n=>{
-    const isActive=n.dataset.screen===screenId;
-    n.classList.toggle('bg-primary-container',isActive);
-    n.classList.toggle('text-on-primary-container',isActive);
-    n.classList.toggle('font-bold',isActive);
-    n.classList.toggle('text-on-surface-variant',!isActive);
+  // Sidebar nav
+  document.querySelectorAll('.nav a').forEach(a=>{
+    a.classList.remove('active');
+    const oc=a.getAttribute('onclick')||'';
+    if(oc.includes("'"+screenId+"'")) a.classList.add('active');
   });
-
-  // Mobile bottom nav active
-  document.querySelectorAll('.mob-nav').forEach(b=>{
-    const isActive=b.dataset.screen===screenId;
-    b.classList.toggle('bg-secondary-container',isActive);
-    b.classList.toggle('text-on-secondary-container',isActive);
-    b.classList.toggle('rounded-full',isActive);
-    b.classList.toggle('px-5',isActive);
-    b.classList.toggle('py-1',isActive);
-    b.classList.toggle('text-on-surface-variant',!isActive);
-    b.classList.toggle('p-2',!isActive);
+  // Mobile nav
+  document.querySelectorAll('.mob-nav a').forEach(a=>{
+    a.classList.remove('active');
+    const oc=a.getAttribute('onclick')||'';
+    if(oc.includes("'"+screenId+"'")) a.classList.add('active');
   });
+  // Mobile header
+  const t=document.getElementById('mob-title');
+  const s=document.getElementById('mob-sub');
+  if(t) t.textContent=TITLES[screenId]||screenId;
+  if(s) s.textContent=SUBS[screenId]||'';
 
-  // Render
-  if(screenId==='inspections') renderInspections();
-  if(screenId==='active-inspection') renderSections();
-  if(screenId==='inspection-section') renderSectionItems();
-  if(screenId==='locations') renderLocations();
-  if(screenId==='location-detail') renderLocationDetail(ctx.id||1);
-  if(screenId==='alerts') renderAlerts();
-  if(screenId==='violation-detail') renderViolationDetail(ctx.id||1);
-  if(screenId==='dashboard') renderHeatmap();
-
+  // Render screen content
+  if(typeof RENDERERS[screenId]==='function') RENDERERS[screenId](ctx);
   window.scrollTo(0,0);
 }
-
-function goBack() {
+function goBack(){
   const cur=document.querySelector('.screen.active');
   if(!cur) return;
   const id=cur.id.replace('screen-','');
-  nav(backScreens[id]||'dashboard');
+  nav(BACK[id]||'dashboard');
 }
 
-// ── RENDERERS ─────────────────────────────────
-function renderHeatmap() {
-  const el=document.getElementById('heatmap');
-  if(!el||el.children.length) return;
-  let h='';
-  for(let i=0;i<28;i++){
-    const op=[10,20,40,60,90,10,20][i%7];
-    const col=op>60?'bg-error':op>30?'bg-primary':'bg-surface-container';
-    h+=`<div class="${col} h-6 rounded-sm opacity-${op} hover:scale-110 transition-all"></div>`;
-  }
-  el.innerHTML=h;
+// Renderers registry — populated by subsequent steps
+const RENDERERS={};
+
+// ── INLINE DATA ──
+const LOCATIONS=[
+  {id:1,name:'South Station Deli',score:64,lastAudit:'2d ago',criticals:2,address:'142 South Station Blvd, SF CA',region:'West Coast'},
+  {id:2,name:'Broadway Express',score:72,lastAudit:'5h ago',criticals:1,address:'88 Broadway Ave, SF CA',region:'West Coast'},
+  {id:3,name:'Grand Central Kitchen',score:98,lastAudit:'12h ago',criticals:0,address:'1 Grand Central Plaza, Oakland CA',region:'West Coast'},
+  {id:4,name:'Harbor View Café',score:86,lastAudit:'1d ago',criticals:0,address:'500 Harbor Dr, San Jose CA',region:'West Coast'},
+  {id:5,name:'Sunset Grille',score:91,lastAudit:'3d ago',criticals:0,address:'2200 Sunset Blvd, Los Angeles CA',region:'West Coast'},
+  {id:6,name:'The Market Table',score:79,lastAudit:'5d ago',criticals:0,address:'600 Market St, Portland OR',region:'West Coast'},
+];
+const INSPECTIONS=[
+  {id:1,location:'South Station Deli',inspector:'Mike Rodriguez',date:'May 16, 2026',score:64,status:'failed',type:'Routine'},
+  {id:2,location:'Grand Central Kitchen',inspector:'Sarah Chen',date:'May 18, 2026',score:98,status:'passed',type:'Routine'},
+  {id:3,location:'Broadway Express',inspector:'Mike Rodriguez',date:'May 17, 2026',score:72,status:'passed',type:'Follow-Up'},
+  {id:4,location:'Harbor View Café',inspector:'James Park',date:'May 17, 2026',score:86,status:'passed',type:'Routine'},
+  {id:5,location:'Sunset Grille',inspector:'Lisa Torres',date:'May 15, 2026',score:91,status:'passed',type:'Routine'},
+  {id:6,location:'The Market Table',inspector:'Mike Rodriguez',date:'May 13, 2026',score:79,status:'passed',type:'Routine'},
+];
+const SECTIONS=[
+  {id:1,name:'Food Storage',items:7,done:4,score:null,status:'in-progress'},
+  {id:2,name:'Personal Hygiene',items:6,done:6,score:95,status:'complete'},
+  {id:3,name:'Equipment Sanitation',items:8,done:8,score:80,status:'complete'},
+  {id:4,name:'Pest Control',items:4,done:4,score:100,status:'complete'},
+  {id:5,name:'Documentation',items:5,done:0,score:null,status:'pending'},
+];
+const ITEMS=[
+  {id:1,label:'Proper cold storage temperatures (≤41°F)',critical:true,status:'pass'},
+  {id:2,label:'Raw meats stored below ready-to-eat foods',critical:true,status:'pass'},
+  {id:3,label:'All containers labeled and dated',critical:false,status:'fail'},
+  {id:4,label:'FIFO rotation in place',critical:false,status:'pass'},
+  {id:5,label:'No expired products on shelf',critical:true,status:null},
+  {id:6,label:'Walk-in cooler door seals intact',critical:false,status:null},
+  {id:7,label:'Temperature logs up to date',critical:false,status:null},
+];
+const ALERTS=[
+  {id:1,sev:'critical',title:'Failed Inspection: Savory Bistro',desc:'Score 58% — below 70% threshold',loc:'South Station Deli',time:'12m ago',resolved:false},
+  {id:2,sev:'critical',title:'Temp Alert #402 — Main Walk-in',desc:'48°F detected, threshold 40°F',loc:'Broadway Express',time:'34m ago',resolved:false},
+  {id:3,sev:'critical',title:'Overdue Deep Clean — North End',desc:'Sanitization 4 days past due',loc:'South Station Deli',time:'4d ago',resolved:false},
+  {id:4,sev:'medium',title:'Incomplete Temperature Log',desc:'3 entries missing from weekly log',loc:'Grand Central Kitchen',time:'2d ago',resolved:true},
+  {id:5,sev:'medium',title:'Sanitizer Concentration Low',desc:'150ppm; min 200ppm required',loc:'Harbor View Café',time:'3d ago',resolved:true},
+  {id:6,sev:'medium',title:'Pest Trap Not Replaced',desc:'Monthly replacement 8 days overdue',loc:'Sunset Grille',time:'1d ago',resolved:false},
+  {id:7,sev:'low',title:'Handwashing Log Incomplete',desc:'2 missing signatures, evening shift',loc:'Broadway Express',time:'5d ago',resolved:true},
+];
+const VIOLATIONS={
+  1:{title:'Failed Inspection: Savory Bistro',sev:'critical',loc:'South Station Deli',date:'May 18, 2026',inspector:'Mike Rodriguez',desc:'Overall inspection score of 58% — below the 70% passing threshold. Multiple food storage and hygiene violations.',remediation:'Schedule immediate follow-up within 48 hours. All critical items must be resolved before reopening prep areas.',status:'open'},
+  2:{title:'Walk-in Temperature Violation #402',sev:'critical',loc:'Broadway Express',date:'May 18, 2026',inspector:'Sarah Chen',desc:'Walk-in cooler reading 48°F. FDA standard requires ≤41°F for all refrigerated foods.',remediation:'Service refrigeration unit immediately. Discard food held >4h above temp. Verify repair before use.',status:'open'},
+  3:{title:'Sanitation Overdue — North End',sev:'medium',loc:'South Station Deli',date:'May 14, 2026',inspector:'Mike Rodriguez',desc:'Deep clean of prep surfaces and hood units is 4 days past scheduled date.',remediation:'Schedule and complete deep clean within 24 hours. Photograph all surfaces before and after.',status:'open'},
+  4:{title:'Sanitizer Concentration Below Standard',sev:'medium',loc:'Grand Central Kitchen',date:'May 18, 2026',inspector:'Mike Rodriguez',desc:'Active sanitizer measured at 150ppm chlorine. Minimum 200ppm required for food contact surfaces.',remediation:'Prepare fresh sanitizer and retest. Do not use surfaces until test confirms compliance.',status:'pending'},
+  5:{title:'Incomplete Temperature Log',sev:'low',loc:'Grand Central Kitchen',date:'May 18, 2026',inspector:'Mike Rodriguez',desc:'Weekly log missing 3 entries from Tuesday and Wednesday AM checks.',remediation:'Complete missing entries from sensor data if available. Update staff logging procedure.',status:'pending'},
+};
+
+// Helper
+function scoreColor(s){return s<70?'#b91c1c':s<85?'#d97706':'#16a34a'}
+function scoreBadge(s){
+  if(s<70) return '<span class="badge badge-red">FAIL</span>';
+  if(s<85) return '<span class="badge badge-amber">WARN</span>';
+  return '<span class="badge badge-green">PASS</span>';
 }
 
-function renderInspections(){
-  document.getElementById('inspections-list').innerHTML=INSPECTIONS.map(i=>{
-    const isF=i.status==='failed';
-    return`<div onclick="nav('completed-inspection')" class="flex items-center gap-4 bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl cursor-pointer hover:shadow-sm transition-shadow">
-      <div class="font-headline-md text-headline-md font-bold ${isF?'text-error':'text-secondary'} w-14 text-center flex-shrink-0">${i.score}%</div>
-      <div class="flex-1 min-w-0"><div class="font-label-bold text-label-bold text-primary truncate">${i.location}</div><div class="font-label-sm text-label-sm text-on-surface-variant">${i.type} · ${i.date}</div><div class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">${i.inspector}</div></div>
-      <span class="${isF?'bg-error-container text-on-error-container':'bg-surface-container text-on-surface-variant'} text-[10px] font-bold px-2 py-1 rounded">${isF?'FAIL':'PASS'}</span>
-    </div>`;
-  }).join('');
-}
-
-function renderSections(){
-  document.getElementById('sections-list').innerHTML=SECTIONS.map(s=>{
-    const icon=s.status==='complete'?'check_circle':s.status==='in-progress'?'pending':'radio_button_unchecked';
-    const col=s.status==='complete'?'text-secondary':s.status==='in-progress'?'text-primary':'text-outline';
-    const badge=s.score!==null?`<span class="bg-surface-container text-on-surface-variant text-[10px] font-bold px-2 py-1 rounded">${s.score}%</span>`:s.status==='in-progress'?`<span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-1 rounded">${s.done}/${s.items}</span>`:`<span class="bg-surface-container text-on-surface-variant text-[10px] font-bold px-2 py-1 rounded">${s.items} items</span>`;
-    return`<div onclick="nav('inspection-section')" class="flex items-center gap-4 bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl cursor-pointer hover:shadow-sm transition-shadow">
-      <span class="material-symbols-outlined ${col} flex-shrink-0">${icon}</span>
-      <div class="flex-1 min-w-0"><div class="font-label-bold text-label-bold text-primary">${s.name}</div><div class="font-label-sm text-label-sm text-on-surface-variant">${s.items} items</div></div>
-      ${badge}
-      <span class="material-symbols-outlined text-outline" style="font-size:18px">chevron_right</span>
-    </div>`;
-  }).join('');
-}
-
-function renderSectionItems(){
-  document.getElementById('section-items-list').innerHTML=SECTION_ITEMS.map(item=>{
-    const passOn=item.status==='pass';const failOn=item.status==='fail';
-    const crit=item.critical?`<span class="bg-error-container text-on-error-container text-[10px] font-bold px-2 py-1 rounded inline-block mt-1">CRITICAL</span>`:'';
-    return`<div onclick="nav('item-detail')" class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl cursor-pointer hover:shadow-sm transition-shadow">
-      <div class="mb-3"><div class="font-body-md text-body-md font-semibold leading-tight">${item.label}</div>${crit}</div>
-      <div class="grid grid-cols-2 gap-2">
-        <button onclick="event.stopPropagation()" class="flex items-center justify-center gap-2 py-2 rounded-xl border-2 ${passOn?'border-secondary bg-secondary/10':'border-outline-variant hover:border-secondary'} transition-all font-label-bold text-label-bold ${passOn?'text-secondary':'text-on-surface-variant'}">
-          <span class="material-symbols-outlined" style="font-size:18px">check_circle</span>PASS
-        </button>
-        <button onclick="event.stopPropagation()" class="flex items-center justify-center gap-2 py-2 rounded-xl border-2 ${failOn?'border-error bg-error/10':'border-outline-variant hover:border-error'} transition-all font-label-bold text-label-bold ${failOn?'text-error':'text-on-surface-variant'}">
-          <span class="material-symbols-outlined" style="font-size:18px">cancel</span>FAIL
-        </button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderLocations(){
-  document.getElementById('locations-list').innerHTML=LOCATIONS.map(loc=>{
-    const col=loc.score<70?'text-error':loc.score<85?'text-primary':'text-secondary';
-    const badge=loc.criticals>1?'bg-error-container text-on-error-container':loc.criticals===1?'bg-secondary-container text-on-secondary-container':'bg-surface-container text-on-surface-variant';
-    const label=loc.criticals>0?`${loc.criticals} CRITICAL`:'ALL CLEAR';
-    return`<div onclick="nav('location-detail',{id:${loc.id}})" class="flex items-center gap-4 bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl cursor-pointer hover:shadow-sm transition-shadow">
-      <div class="font-headline-md text-headline-md font-bold ${col} w-16 text-center flex-shrink-0">${loc.score}%</div>
-      <div class="flex-1 min-w-0"><div class="font-label-bold text-label-bold text-primary">${loc.name}</div><div class="font-label-sm text-label-sm text-on-surface-variant">${loc.address}</div><div class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">Last audit: ${loc.lastAudit}</div></div>
-      <span class="${badge} text-[10px] font-bold px-2 py-1 rounded flex-shrink-0">${label}</span>
-    </div>`;
-  }).join('');
-}
-
-function renderLocationDetail(id){
-  const loc=LOCATIONS.find(l=>l.id===id)||LOCATIONS[0];
-  document.getElementById('header-title').textContent=loc.name;
-  const col=loc.score<70?'text-error':loc.score<85?'text-primary':'text-secondary';
-  const lInsp=INSPECTIONS.filter(i=>i.location===loc.name);
-  const iHTML=lInsp.length?lInsp.map(i=>`<div onclick="nav('completed-inspection')" class="flex justify-between items-center py-2 border-b border-outline-variant cursor-pointer hover:bg-surface-container-low px-1 rounded">
-    <div><div class="font-label-bold text-label-bold text-primary">${i.type} Audit</div><div class="font-label-sm text-label-sm text-on-surface-variant">${i.date} · ${i.inspector}</div></div>
-    <span class="${i.status==='failed'?'bg-error-container text-on-error-container':'bg-surface-container text-on-surface-variant'} text-[10px] font-bold px-2 py-1 rounded">${i.score}%</span>
-  </div>`).join(''):`<div class="font-body-md text-body-md text-on-surface-variant">No inspections yet</div>`;
-  document.getElementById('location-detail-content').innerHTML=`
-    <div class="bg-primary-container text-on-primary-container p-card-padding rounded-xl flex items-center gap-5">
-      <div class="font-display-lg ${col.replace('text-','text-')} leading-none" style="font-size:52px">${loc.score}%</div>
-      <div><div class="font-headline-sm">${loc.name}</div><div class="font-label-sm opacity-70 mt-1">${loc.address}</div><div class="font-label-sm opacity-70 mt-1">Last audit: ${loc.lastAudit}</div></div>
-    </div>
-    <div class="grid grid-cols-3 gap-gutter-grid">
-      <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl text-center"><div class="font-display-lg-mobile text-primary">${lInsp.length}</div><div class="font-label-bold text-label-bold text-on-surface-variant uppercase mt-1">Inspections</div></div>
-      <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl text-center"><div class="font-display-lg-mobile ${loc.criticals>0?'text-error':'text-secondary'}">${loc.criticals}</div><div class="font-label-bold text-label-bold text-on-surface-variant uppercase mt-1">Criticals</div></div>
-      <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl text-center"><div class="font-display-lg-mobile ${col}">${loc.score}%</div><div class="font-label-bold text-label-bold text-on-surface-variant uppercase mt-1">Score</div></div>
-    </div>
-    <div><div class="font-headline-sm text-headline-sm text-primary mb-stack-md">Inspection History</div><div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl">${iHTML}</div></div>
-    <div class="flex gap-3">
-      <button onclick="nav('new-inspection')" class="flex-1 py-3 bg-primary text-on-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95"><span class="material-symbols-outlined">add</span>NEW INSPECTION</button>
-      <button onclick="nav('alerts')" class="flex-1 py-3 bg-surface-container-lowest border border-primary text-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95"><span class="material-symbols-outlined">warning</span>VIEW RISKS</button>
-    </div>`;
-}
-
-function renderAlerts(){
-  document.getElementById('alerts-list').innerHTML=ALERTS.map(a=>{
-    const icon=a.severity==='critical'?'emergency':a.severity==='medium'?'warning':'info';
-    const icol=a.severity==='critical'?'text-error':'text-on-surface-variant';
-    const badge=a.severity==='critical'?'bg-error-container text-on-error-container':a.severity==='medium'?'bg-secondary-container text-on-secondary-container':'bg-surface-container text-on-surface-variant';
-    return`<div onclick="nav('violation-detail',{id:${a.id}})" class="flex items-start gap-4 bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl cursor-pointer hover:shadow-sm transition-shadow ${a.resolved?'opacity-50':''}">
-      <span class="material-symbols-outlined ${icol} flex-shrink-0 mt-0.5">${icon}</span>
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-2 mb-1 flex-wrap">
-          <span class="${badge} text-[10px] font-bold px-2 py-0.5 rounded">${a.severity.toUpperCase()}</span>
-          ${a.resolved?'<span class="bg-surface-container text-on-surface-variant text-[10px] font-bold px-2 py-0.5 rounded">RESOLVED</span>':''}
-        </div>
-        <div class="font-label-bold text-label-bold text-primary">${a.title}</div>
-        <div class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">${a.desc}</div>
-        <div class="font-label-sm text-label-sm text-on-surface-variant mt-1">${a.location} · ${a.time}</div>
-      </div>
-      ${!a.resolved?`<button onclick="event.stopPropagation();resolveAlert(${a.id})" class="text-error font-bold text-[11px] flex-shrink-0 mt-1 active:scale-95">Resolve</button>`:''}
-    </div>`;
-  }).join('');
-}
-
-function resolveAlert(id){const a=ALERTS.find(x=>x.id===id);if(a){a.resolved=true;renderAlerts();}}
-
-function renderViolationDetail(id){
-  const v=VIOLATIONS[id]||VIOLATIONS[1];
-  const badge=v.severity==='critical'?'bg-error-container text-on-error-container':v.severity==='medium'?'bg-secondary-container text-on-secondary-container':'bg-surface-container text-on-surface-variant';
-  document.getElementById('violation-detail-content').innerHTML=`
-    <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl">
-      <span class="${badge} text-[10px] font-bold px-2 py-1 rounded inline-block mb-3">${v.severity.toUpperCase()}</span>
-      <div class="font-headline-sm text-headline-sm text-primary mb-2">${v.title}</div>
-      <div class="font-body-md text-body-md text-on-surface-variant leading-relaxed">${v.desc}</div>
-    </div>
-    <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl space-y-2">
-      <div class="font-label-bold text-label-bold text-on-surface-variant uppercase mb-2">Details</div>
-      <div class="flex justify-between font-body-md text-body-md"><span class="text-on-surface-variant">Location</span><span class="font-semibold">${v.location}</span></div>
-      <div class="flex justify-between font-body-md text-body-md"><span class="text-on-surface-variant">Date Found</span><span class="font-semibold">${v.date}</span></div>
-      <div class="flex justify-between font-body-md text-body-md"><span class="text-on-surface-variant">Inspector</span><span class="font-semibold">${v.inspector}</span></div>
-      <div class="flex justify-between font-body-md text-body-md"><span class="text-on-surface-variant">Status</span><span class="font-semibold ${v.status==='open'?'text-error':''}">${v.status.toUpperCase()}</span></div>
-    </div>
-    <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl">
-      <div class="font-label-bold text-label-bold text-on-surface-variant uppercase mb-2">Required Remediation</div>
-      <div class="font-body-md text-body-md leading-relaxed">${v.remediation}</div>
-    </div>
-    <div class="bg-surface-container-lowest border border-outline-variant p-card-padding rounded-xl">
-      <div class="font-label-bold text-label-bold text-on-surface-variant uppercase mb-3">Evidence</div>
-      <button onclick="nav('photo-capture')" class="flex items-center gap-2 w-full p-3 border-2 border-dashed border-outline-variant rounded-xl hover:border-primary transition-colors active:scale-95">
-        <span class="material-symbols-outlined text-outline">add_photo_alternate</span>
-        <span class="font-body-md text-body-md text-on-surface-variant">Attach photo evidence</span>
-      </button>
-    </div>
-    <div class="flex gap-3">
-      <button onclick="nav('inspections')" class="flex-1 py-3 bg-primary text-on-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95"><span class="material-symbols-outlined">check_circle</span>MARK RESOLVED</button>
-      <button onclick="nav('new-inspection')" class="flex-1 py-3 bg-surface-container-lowest border border-primary text-primary font-label-bold text-label-bold rounded-xl flex justify-center items-center gap-2 active:scale-95"><span class="material-symbols-outlined">assignment</span>FOLLOW-UP</button>
-    </div>`;
-}
-
-// ── ITEM PASS/FAIL ────────────────────────────
-function setPassFail(val){
-  const p=document.getElementById('btn-pass'),f=document.getElementById('btn-fail');
-  if(val==='pass'){
-    p.className='flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-secondary bg-secondary/10 active:scale-95 transition-all';
-    p.querySelector('.material-symbols-outlined').className='material-symbols-outlined text-secondary ms-fill';
-    p.querySelector('span:last-child').className='font-label-bold text-label-bold text-secondary';
-    f.className='flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-outline-variant active:scale-95 transition-all hover:border-error';
-    f.querySelector('.material-symbols-outlined').className='material-symbols-outlined text-outline';
-    f.querySelector('span:last-child').className='font-label-bold text-label-bold text-on-surface-variant';
-  } else {
-    f.className='flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-error bg-error/10 active:scale-95 transition-all';
-    f.querySelector('.material-symbols-outlined').className='material-symbols-outlined text-error ms-fill';
-    f.querySelector('span:last-child').className='font-label-bold text-label-bold text-error';
-    p.className='flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-outline-variant active:scale-95 transition-all hover:border-secondary';
-    p.querySelector('.material-symbols-outlined').className='material-symbols-outlined text-outline';
-    p.querySelector('span:last-child').className='font-label-bold text-label-bold text-on-surface-variant';
-  }
-}
-
-// ── VOICE RECORD ──────────────────────────────
-let recording=false,waveInt=null;
-function toggleRecord(){
-  recording=!recording;
-  const btn=document.getElementById('record-btn');
-  const status=document.getElementById('record-status');
-  const wave=document.getElementById('wave');
-  if(recording){
-    btn.classList.replace('bg-primary-container','bg-error');
-    btn.querySelector('.material-symbols-outlined').classList.replace('text-on-primary-container','text-on-error');
-    status.textContent='Recording…';status.classList.add('text-error');
-    waveInt=setInterval(()=>{wave.innerHTML=Array.from({length:20},()=>`<div style="width:3px;height:${4+Math.random()*28}px;background:#191c1e;border-radius:2px"></div>`).join('');},120);
-  } else {
-    btn.classList.replace('bg-error','bg-primary-container');
-    btn.querySelector('.material-symbols-outlined').classList.replace('text-on-error','text-on-primary-container');
-    status.textContent='Recording saved';status.classList.remove('text-error');
-    clearInterval(waveInt);wave.innerHTML='';
-    setTimeout(()=>{status.textContent='Tap to record';},2000);
-  }
-}
-
-// ── INIT ──────────────────────────────────────
-renderHeatmap();
-nav('dashboard');
+// Screen content scripts injected by next steps
 </script>
 </body>
 </html>
