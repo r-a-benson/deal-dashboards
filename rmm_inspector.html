@@ -624,6 +624,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
         Select Location
       </button>
+      <button class="btn-primary" onclick="nav('task-detail',{id:1,isNew:true})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Task
+      </button>
     </div>
   </div>
   <div class="content" id="tasks-content"></div>
@@ -1568,6 +1572,12 @@ function renderTaskCard(t, hideLocationTag=false) {
           </button>
         </div>
         <div onclick="event.stopPropagation()">${ctaBtn}</div>
+      </div>
+      <div style="padding:10px 16px 14px;border-top:1px solid #f3f4f6;display:flex;align-items:center;justify-content:flex-end">
+        <span style="font-size:12px;font-weight:700;color:#3b82f6;display:flex;align-items:center;gap:4px">
+          View Details
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </span>
       </div>
     </div>
   </div>`;
