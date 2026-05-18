@@ -767,7 +767,201 @@ function scoreBadge(s){
   return '<span class="badge badge-green">PASS</span>';
 }
 
-// Screen content scripts injected by next steps
+// ── SCREEN RENDERERS ─────────────────────────
+
+// S1: Dashboard
+RENDERERS['dashboard'] = function() {
+  document.getElementById('dashboard-content').innerHTML = `
+  <div class="kpi-strip">
+    <div class="kpi-c green">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+      <div class="tx"><div class="lbl">Compliance</div><div class="v">94.2%</div><div class="delta up">▲ +2.4% vs last mo</div></div>
+    </div>
+    <div class="kpi-c red">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+      <div class="tx"><div class="lbl">Critical Risks</div><div class="v">12</div><div class="delta">Across 4 locations</div></div>
+    </div>
+    <div class="kpi-c amber">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="tx"><div class="lbl">Overdue Actions</div><div class="v">08</div><div class="delta down">Needs attention</div></div>
+    </div>
+    <div class="kpi-c blue">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+      <div class="tx"><div class="lbl">Completion Rate</div><div class="v">88%</div><div class="delta">Goal: 95%</div></div>
+    </div>
+  </div>
+
+  <div class="grid-3" style="margin-bottom:20px">
+    <!-- Location cards -->
+    ${LOCATIONS.slice(0,3).map(loc=>`
+    <div class="card" style="cursor:pointer" onclick="nav('location-detail',{id:${loc.id}})">
+      <div class="card-h">
+        <h3>${loc.name}</h3>
+        ${loc.criticals>0?`<span class="badge badge-red">${loc.criticals} CRITICAL</span>`:'<span class="badge badge-green">ALL CLEAR</span>'}
+      </div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between">
+        <div>
+          <div style="font-size:32px;font-weight:800;color:${scoreColor(loc.score)};line-height:1">${loc.score}%</div>
+          <div style="font-size:11px;color:#6b7280;margin-top:4px">Last audit: ${loc.lastAudit}</div>
+        </div>
+        <svg width="80" height="32" viewBox="0 0 100 30"><polyline points="${loc.id===1?'0,25 20,28 40,15 60,25 80,20 100,28':loc.id===2?'0,20 20,10 40,15 60,5 80,12 100,8':'0,15 20,5 40,8 60,2 80,5 100,3'}" fill="none" stroke="${scoreColor(loc.score)}" stroke-width="2.5"/></svg>
+      </div>
+    </div>`).join('')}
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-h"><h3>Compliance Trend</h3><a class="lk" onclick="nav('reports')">View Report →</a></div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:6px;height:120px">
+        ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i)=>{const h=[60,75,85,70,90,94,96][i];return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="flex:1;width:100%;display:flex;align-items:flex-end"><div style="width:100%;height:${h}%;background:${i===6?'#0a2540':'#e5e7eb'};border-radius:3px 3px 0 0;transition:background .15s" onmouseenter="this.style.background='#0a2540'" onmouseleave="this.style.background='${i===6?'#0a2540':'#e5e7eb'}'"></div></div><div style="font-size:9px;color:#9ca3af;font-weight:700">${d}</div></div>`;}).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>Violations by Category</h3></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${[['Food Storage',42,'#ef4444'],['Personal Hygiene',28,'#0a2540'],['Equipment',18,'#f59e0b'],['Pest Control',12,'#9ca3af']].map(([n,p,c])=>`
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:#374151;font-weight:600">${n}</span><span style="color:${c};font-weight:700">${p}%</span></div>
+          <div class="prog-bar"><div style="width:${p}%;background:${c}"></div></div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="card-h" style="margin-bottom:10px"><h3>Critical Alerts</h3><a class="lk" onclick="nav('alerts')">View all →</a></div>
+      ${ALERTS.filter(a=>!a.resolved).slice(0,3).map(a=>`
+      <div class="alert-bar ${a.sev==='critical'?'crit':a.sev==='medium'?'warn':'info'}" onclick="nav('violation-detail',{id:${a.id}})" style="cursor:pointer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div class="ab-body"><div class="abt">${a.title}</div><div class="abs">${a.loc} · ${a.time}</div></div>
+        <span onclick="event.stopPropagation();resolveAlert(${a.id})" class="ab-act">Resolve</span>
+      </div>`).join('')}
+    </div>
+    <div>
+      <div class="card-h" style="margin-bottom:10px"><h3>Recent Activity</h3><a class="lk" onclick="nav('inspections')">View all →</a></div>
+      <div class="card" style="padding:12px 16px">
+        ${[['Inspection Completed','Broadway Express','1h ago','green'],['Risk Resolved','Mike R.','3h ago','green'],['Audit Failed','North End','Yesterday','red'],['New Inspection Started','Harbor View Café','2d ago','blue']].map(([a,b,t,c])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f3f4f6">
+          <div><div style="font-size:13px;font-weight:600;color:${c==='red'?'#b91c1c':'#111827'}">${a}</div><div style="font-size:11px;color:#6b7280">${b}</div></div>
+          <span style="font-size:11px;color:${c==='red'?'#b91c1c':'#9ca3af'};font-weight:${c==='red'?700:400}">${t}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-top:4px">
+    <button class="btn-primary" onclick="nav('reports')">View Full Reports</button>
+    <button class="btn-outline" onclick="nav('alerts')">Open Risks (12)</button>
+    <button class="btn-primary" onclick="nav('new-inspection')" style="margin-left:auto">+ Start New Inspection</button>
+  </div>`;
+};
+
+// S2: Inspections
+RENDERERS['inspections'] = function() {
+  document.getElementById('inspections-content').innerHTML = `
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <input type="text" placeholder="Search inspections…" style="flex:1;min-width:160px;padding:8px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${['All','In Progress','Completed','Failed','This Week'].map((f,i)=>`<button class="badge ${i===0?'badge-navy':'badge-gray'}" style="padding:5px 12px;cursor:pointer;font-size:11px">${f}</button>`).join('')}
+    </div>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="background:#f9fafb;border-bottom:2px solid #e5e7eb">
+        <th style="padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px">Location</th>
+        <th style="padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px">Type</th>
+        <th style="padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px">Inspector</th>
+        <th style="padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px">Date</th>
+        <th style="padding:10px 16px;text-align:right;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px">Score</th>
+        <th style="padding:10px 16px;text-align:center;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px">Status</th>
+      </tr></thead>
+      <tbody>
+        ${INSPECTIONS.map(i=>`<tr onclick="nav('completed-inspection')" style="cursor:pointer;border-bottom:1px solid #f3f4f6" onmouseenter="this.style.background='#f9fafb'" onmouseleave="this.style.background=''">
+          <td style="padding:11px 16px;font-weight:600;color:#111827">${i.location}</td>
+          <td style="padding:11px 16px;color:#374151">${i.type}</td>
+          <td style="padding:11px 16px;color:#374151">${i.inspector}</td>
+          <td style="padding:11px 16px;color:#6b7280">${i.date}</td>
+          <td style="padding:11px 16px;text-align:right;font-weight:700;color:${scoreColor(i.score)}">${i.score}%</td>
+          <td style="padding:11px 16px;text-align:center">${scoreBadge(i.score)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+};
+
+// S3: Reports
+RENDERERS['reports'] = function() {
+  document.getElementById('reports-content').innerHTML = `
+  <div style="display:flex;gap:6px;margin-bottom:20px">
+    ${['This Month','Last 90 Days','YTD','Custom'].map((p,i)=>`<button class="badge ${i===0?'badge-navy':'badge-gray'}" style="padding:5px 12px;cursor:pointer;font-size:11px">${p}</button>`).join('')}
+  </div>
+  <div class="kpi-strip" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
+    <div class="kpi-c green"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg></div><div class="tx"><div class="lbl">Avg Compliance</div><div class="v">94.2%</div><div class="delta up">▲ +2.4%</div></div></div>
+    <div class="kpi-c blue"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="tx"><div class="lbl">Inspections</div><div class="v">47</div><div class="delta">This period</div></div></div>
+    <div class="kpi-c red"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div><div class="tx"><div class="lbl">Open Risks</div><div class="v">12</div><div class="delta down">3 critical</div></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-h"><h3>Monthly Compliance Trend</h3></div>
+      <div style="display:flex;align-items:flex-end;gap:8px;height:130px">
+        ${['Jan','Feb','Mar','Apr','May'].map((m,i)=>{const h=[82,78,85,88,94][i];return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="flex:1;width:100%;display:flex;align-items:flex-end"><div style="width:100%;height:${h}%;background:${i===4?'#16a34a':'#dcfce7'};border-radius:3px 3px 0 0"></div></div><div style="font-size:10px;color:#6b7280;font-weight:600">${m}</div><div style="font-size:10px;font-weight:700;color:${i===4?'#16a34a':'#374151'}">${h}%</div></div>`;}).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>At-Risk Locations</h3><a class="lk" onclick="nav('locations')">View all →</a></div>
+      ${LOCATIONS.filter(l=>l.score<90).map(l=>`
+      <div class="list-row" onclick="nav('location-detail',{id:${l.id}})">
+        <div class="row-ic ${l.score<70?'red':l.score<85?'amber':'green'}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div class="row-body"><div class="name">${l.name}</div><div class="sub">${l.criticals} critical · Last audit ${l.lastAudit}</div></div>
+        <div class="row-end"><div style="font-size:18px;font-weight:700;color:${scoreColor(l.score)}">${l.score}%</div>${scoreBadge(l.score)}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+};
+
+// S4: Settings
+RENDERERS['settings'] = function() {
+  document.getElementById('settings-content').innerHTML = `
+  <div style="max-width:540px;display:flex;flex-direction:column;gap:16px">
+    <div class="card">
+      <div class="section-title">Region</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f3f4f6">
+        <div><div style="font-size:13px;font-weight:600;color:#111827">Active Region</div><div style="font-size:11px;color:#6b7280">West Coast</div></div>
+        <button class="btn-outline" style="padding:5px 10px;font-size:12px">Change</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
+        <div><div style="font-size:13px;font-weight:600;color:#111827">Time Zone</div><div style="font-size:11px;color:#6b7280">America/Los_Angeles</div></div>
+        <button class="btn-outline" style="padding:5px 10px;font-size:12px">Edit</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Notifications</div>
+      ${[['Critical Alerts','Push + email for critical violations',true],['Inspection Due Reminders','24h before scheduled audit',true],['Weekly Summary','Monday morning digest',false]].map(([n,d,c])=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f3f4f6">
+        <div><div style="font-size:13px;font-weight:600;color:#111827">${n}</div><div style="font-size:11px;color:#6b7280">${d}</div></div>
+        <label class="tog"><input type="checkbox" ${c?'checked':''}><span class="tog-sl"></span></label>
+      </div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="section-title">Inspection Defaults</div>
+      ${[['Require Photo Evidence','Mandatory for critical items',true],['Auto-save Notes','Save drafts every 30s',true]].map(([n,d,c])=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f3f4f6">
+        <div><div style="font-size:13px;font-weight:600;color:#111827">${n}</div><div style="font-size:11px;color:#6b7280">${d}</div></div>
+        <label class="tog"><input type="checkbox" ${c?'checked':''}><span class="tog-sl"></span></label>
+      </div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="section-title">App</div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px"><span style="color:#374151;font-weight:600">Version</span><span style="color:#6b7280">RMMInspector 2.4.1</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px"><span style="color:#374151;font-weight:600">Data Sync</span><span style="color:#16a34a;font-weight:600">Up to date</span></div>
+    </div>
+    <button class="btn-danger" style="width:100%;justify-content:center;padding:10px">Sign Out</button>
+  </div>`;
+};
+
 </script>
 </body>
 </html>
