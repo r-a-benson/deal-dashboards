@@ -340,6 +340,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
       New Inspection
     </a>
+    <a onclick="nav('tasks')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Tasks / Corrective Actions <span class="badge" style="margin-left:auto">3</span>
+    </a>
     <div class="nav-section">Analytics</div>
     <a onclick="nav('reports')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -544,6 +548,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   <div class="content" id="completed-content"></div>
 </div>
 
+<div id="screen-tasks" class="screen">
+  <div class="topbar">
+    <div class="crumb"><h2>Tasks / Corrective Actions</h2><div class="sub">Open, overdue, and resolved items</div></div>
+    <div class="topbar-ctrl">
+      <button class="pill-btn" id="tasks-loc-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Select Location
+      </button>
+    </div>
+  </div>
+  <div class="content" id="tasks-content"></div>
+</div>
+
 <div id="screen-locations" class="screen">
   <div class="topbar"><div class="crumb"><h2>Locations</h2><div class="sub">West Coast Region · 6 locations</div></div></div>
   <div class="content" id="locations-content"></div>
@@ -663,6 +680,7 @@ const TITLES={
   'inspection-section':'Food Storage','item-detail':'Item Detail',
   'completed-inspection':'Inspection Report','locations':'Locations',
   'location-detail':'Location Detail','alerts':'Critical Alerts',
+  'tasks':'Tasks / Corrective Actions',
   'violation-detail':'Violation Detail','photo-capture':'Photo Evidence',
   'voice-notes':'Voice Notes','profile':'Profile',
 };
@@ -675,6 +693,7 @@ const SUBS={
   'completed-inspection':'Grand Central Kitchen · May 18, 2026',
   'locations':'West Coast Region','location-detail':'West Coast Region',
   'alerts':'3 active alerts','violation-detail':'Incident detail',
+  'tasks':'Open, overdue & resolved corrective actions',
   'photo-capture':'Attach evidence','voice-notes':'Record annotation',
   'profile':'Senior Inspector',
 };
@@ -1237,6 +1256,116 @@ RENDERERS['alerts'] = function() {
   </div>`;
 };
 function resolveAlert(id){const a=ALERTS.find(x=>x.id===id);if(a){a.resolved=true;RENDERERS['alerts']();}}
+
+// S17: Tasks / Corrective Actions
+const TASKS = [
+  {id:1,title:'Loose Floor Tile',location:'Kitchen Prep Area',ref:'08-TASK',severity:'critical',status:'in-progress',assignee:'Mike R.',assigneeInitials:'MR',assigneeColor:'#16a34a',due:'Today',dueTime:'5:00 PM',overdue:false,photo:'floor'},
+  {id:2,title:'Expiring Fire Extinguisher Tags',location:'Main Kitchen',ref:'08-TASK',severity:'critical',status:'in-progress',assignee:'Mike R.',assigneeInitials:'MR',assigneeColor:'#16a34a',due:'Today',dueTime:'5:00 PM',overdue:false,photo:'extinguisher'},
+  {id:3,title:'Ansul System Certification Expired',location:'Kitchen Hoods',ref:'10-CERT',severity:'high',status:'pending',assignee:'Sarah L.',assigneeInitials:'SL',assigneeColor:'#2563eb',due:'Oct 28',dueTime:null,overdue:false,photo:'ansul'},
+  {id:4,title:'Walk-in Cooler Temp',location:'Storage Unit B',ref:'02-COLD',severity:'overdue',status:'open',assignee:'John D.',assigneeInitials:'JD',assigneeColor:'#9333ea',due:'2 Days Ago',dueTime:null,overdue:true,photo:'gauge'},
+  {id:5,title:'Grease Trap Cleaning Overdue',location:'Main Kitchen',ref:'11-MAINT',severity:'high',status:'pending',assignee:'Sarah L.',assigneeInitials:'SL',assigneeColor:'#2563eb',due:'Nov 2',dueTime:null,overdue:false,photo:''},
+  {id:6,title:'Hood Suppression System Test',location:'Kitchen Hoods',ref:'12-FIRE',severity:'critical',status:'open',assignee:'Mike R.',assigneeInitials:'MR',assigneeColor:'#16a34a',due:'Tomorrow',dueTime:'9:00 AM',overdue:false,photo:''},
+];
+
+const PHOTO_SVGS = {
+  floor:`<svg viewBox="0 0 80 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="48" fill="#e5e7eb"/><rect x="10" y="8" width="60" height="32" rx="2" fill="#d1d5db"/><line x1="10" y1="24" x2="70" y2="24" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="4 2"/><line x1="40" y1="8" x2="40" y2="40" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="4 2"/><rect x="28" y="20" width="8" height="6" fill="#ef4444" opacity="0.7" rx="1"/><text x="40" y="50" font-size="6" fill="#9ca3af" text-anchor="middle">Floor</text></svg>`,
+  extinguisher:`<svg viewBox="0 0 80 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="48" fill="#fef2f2"/><rect x="34" y="10" width="12" height="28" rx="6" fill="#dc2626" opacity="0.8"/><rect x="30" y="8" width="20" height="5" rx="2" fill="#374151"/><line x1="44" y1="10" x2="54" y2="6" stroke="#374151" stroke-width="2"/><circle cx="56" cy="6" r="3" fill="#374151"/><rect x="20" y="28" width="8" height="10" rx="1" fill="#fbbf24" opacity="0.9"/></svg>`,
+  ansul:`<svg viewBox="0 0 80 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="48" fill="#f5f5f5"/><rect x="15" y="12" width="20" height="26" rx="3" fill="#6b7280"/><rect x="17" y="14" width="16" height="4" rx="1" fill="#9ca3af"/><circle cx="25" cy="30" r="5" fill="#374151"/><rect x="35" y="18" width="30" height="3" rx="1" fill="#9ca3af"/><rect x="35" y="24" width="22" height="3" rx="1" fill="#9ca3af"/><circle cx="62" cy="20" r="4" fill="#ef4444" opacity="0.8"/></svg>`,
+  gauge:`<svg viewBox="0 0 80 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="48" fill="#fef2f2"/><circle cx="40" cy="28" r="16" fill="#fff" stroke="#d1d5db" stroke-width="2"/><circle cx="40" cy="28" r="14" fill="#f9fafb"/><path d="M26 28 A14 14 0 0 1 54 28" fill="none" stroke="#e5e7eb" stroke-width="3"/><line x1="40" y1="28" x2="50" y2="16" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/><circle cx="40" cy="28" r="2" fill="#374151"/><text x="40" y="44" font-size="6" fill="#dc2626" text-anchor="middle" font-weight="bold">HIGH TEMP</text></svg>`,
+};
+
+RENDERERS['tasks'] = function() {
+  const open = TASKS.filter(t=>!t.overdue && t.status!=='completed').length;
+  const overdue = TASKS.filter(t=>t.overdue).length;
+  const completed = 45;
+
+  document.getElementById('tasks-content').innerHTML = `
+  <div style="margin-bottom:16px">
+    <div style="position:relative;margin-bottom:12px">
+      <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:#9ca3af" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search tasks, locations, or assignees…" style="width:100%;padding:10px 12px 10px 38px;border:1px solid #d1d5db;border-radius:10px;font-size:13px;font-family:inherit;background:#fff">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="filterTasks('open',this)" class="task-filter-btn active-filter" style="padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:#111827;color:#fff">Open ${open}</button>
+      <button onclick="filterTasks('overdue',this)" class="task-filter-btn" style="padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;border:1px solid #e5e7eb;cursor:pointer;background:#fff;color:#374151">Overdue <span style="color:#dc2626">${overdue}</span></button>
+      <button onclick="filterTasks('completed',this)" class="task-filter-btn" style="padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;border:1px solid #e5e7eb;cursor:pointer;background:#fff;color:#374151">Completed ${completed}</button>
+    </div>
+  </div>
+  <div id="task-cards" style="display:flex;flex-direction:column;gap:14px">
+    ${TASKS.map(t=>renderTaskCard(t)).join('')}
+  </div>`;
+};
+
+function renderTaskCard(t) {
+  const sevBadge = t.overdue
+    ? `<span style="background:#fee2e2;color:#991b1b;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:0.3px;display:inline-flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>OVERDUE</span>`
+    : t.severity === 'critical'
+    ? `<span style="background:#fee2e2;color:#991b1b;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:0.3px">CRITICAL</span>`
+    : `<span style="background:#dbeafe;color:#1e40af;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:0.3px">HIGH</span>`;
+
+  const dueColor = t.overdue ? '#dc2626' : t.due==='Today' ? '#dc2626' : '#6b7280';
+  const dueText = t.due + (t.dueTime ? `<br><span style="font-size:11px">DUE ${t.dueTime}</span>` : '');
+
+  const ctaBtn = t.overdue
+    ? `<button style="padding:9px 18px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Resolve Now</button>`
+    : t.status==='in-progress'
+    ? `<button style="padding:9px 18px;background:#111827;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Take Action</button>`
+    : `<button style="padding:9px 18px;background:#fff;color:#374151;border:1px solid #d1d5db;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Update</button>`;
+
+  const statusChip = `<span style="background:#f3f4f6;color:#374151;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;display:inline-flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${t.status==='in-progress'?'In Progress':t.status==='open'?'Open':'Pending'}</span>`;
+
+  const photo = PHOTO_SVGS[t.photo];
+  const photoEl = photo
+    ? `<div style="height:140px;overflow:hidden;border-radius:10px 10px 0 0;background:#f3f4f6;display:flex;align-items:center;justify-content:center">${photo.replace('viewBox="0 0 80 48"','viewBox="0 0 80 48" style="width:100%;height:140px;object-fit:cover"')}</div>`
+    : `<div style="height:100px;background:linear-gradient(135deg,#e5e7eb,#f3f4f6);border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>`;
+
+  return `<div style="background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden;${t.overdue?'border-left:4px solid #dc2626;':'border:1px solid #e5e7eb;'}">
+    ${photoEl}
+    <div style="padding:14px 16px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${sevBadge}</div>
+        <div style="text-align:right;flex-shrink:0;font-size:12px;font-weight:700;color:${dueColor};line-height:1.4">${dueText}</div>
+      </div>
+      <div style="font-size:17px;font-weight:700;color:#111827;margin-bottom:8px;line-height:1.3">${t.title}</div>
+      <div style="display:flex;gap:14px;margin-bottom:6px;flex-wrap:wrap">
+        <span style="font-size:12px;color:#6b7280;display:flex;align-items:center;gap:4px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${t.location}
+        </span>
+        <span style="font-size:12px;color:#6b7280;display:flex;align-items:center;gap:4px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Ref: ${t.ref}
+        </span>
+      </div>
+      <div style="margin-bottom:12px">${statusChip}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:32px;height:32px;border-radius:50%;background:${t.assigneeColor};color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${t.assigneeInitials}</div>
+          <span style="font-size:13px;font-weight:600;color:#374151">${t.assignee}</span>
+          <button style="background:none;border:none;cursor:pointer;color:#9ca3af;padding:4px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+        ${ctaBtn}
+      </div>
+    </div>
+  </div>`;
+}
+
+function filterTasks(type, btn) {
+  document.querySelectorAll('.task-filter-btn').forEach(b=>{
+    b.style.background='#fff';b.style.color='#374151';b.style.border='1px solid #e5e7eb';
+  });
+  btn.style.background='#111827';btn.style.color='#fff';btn.style.border='none';
+  const cards = document.getElementById('task-cards');
+  if(!cards) return;
+  const filtered = type==='overdue' ? TASKS.filter(t=>t.overdue)
+    : type==='completed' ? []
+    : TASKS.filter(t=>!t.overdue);
+  cards.innerHTML = filtered.length
+    ? filtered.map(t=>renderTaskCard(t)).join('')
+    : `<div style="text-align:center;color:#9ca3af;padding:40px 0;font-size:14px">No ${type} tasks</div>`;
+}
 
 // S13: Violation Detail
 RENDERERS['violation-detail'] = function(ctx) {
